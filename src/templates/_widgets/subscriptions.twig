@@ -1,0 +1,35 @@
+<div class="subscribr-widget">
+    <ul class="subscribr-stats">
+        <li>
+            <span class="subscribr-stat">{{ activeCount }}</span>
+            <span class="light">{{ 'active'|t('subscribr') }}</span>
+        </li>
+        <li>
+            <span class="subscribr-stat">{{ mrr }}</span>
+            <span class="light">{{ 'monthly recurring'|t('subscribr') }}</span>
+        </li>
+        <li>
+            <span class="subscribr-stat">{{ renewing }}</span>
+            <span class="light">{{ 'renewing in {n} days'|t('subscribr', { n: days }) }}</span>
+        </li>
+    </ul>
+
+    {% if summary.pastDueCount %}
+        <p class="error">
+            <a href="{{ url('subscribr/dunning') }}">
+                {{ '{n, plural, =1{One subscription} other{# subscriptions}} past due — {amount} at risk.'|t('subscribr', {
+                    n: summary.pastDueCount,
+                    amount: atRisk,
+                }) }}
+            </a>
+        </p>
+    {% else %}
+        <p class="light">{{ 'Nothing past due.'|t('subscribr') }}</p>
+    {% endif %}
+</div>
+
+<style>
+    .subscribr-stats { display: flex; gap: 24px; margin-bottom: 12px; }
+    .subscribr-stats li { list-style: none; }
+    .subscribr-stat { display: block; font-size: 22px; font-weight: 600; line-height: 1.2; }
+</style>

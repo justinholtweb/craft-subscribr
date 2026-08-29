@@ -1,0 +1,8 @@
+{% extends 'subscribr/_emails/_layout' %}
+{% block body %}
+    <h1 style="font-size: 20px;">{{ 'That’s sorted'|t('subscribr') }}</h1>
+    <p>{{ 'Your payment went through and your subscription is running normally again.'|t('subscribr') }}</p>
+    {% if subscription.dateNextPayment %}
+        <p>{{ 'Your next payment is {date}.'|t('subscribr', { date: subscription.dateNextPayment|date('j F Y') }) }}</p>
+    {% endif %}
+{% endblock %}

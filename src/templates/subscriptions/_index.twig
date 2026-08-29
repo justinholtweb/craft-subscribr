@@ -1,0 +1,20 @@
+{% extends '_layouts/elementindex' %}
+{% set title = 'Subscriptions'|t('subscribr') %}
+{% set elementType = 'justinholtweb\\subscribr\\elements\\Subscription' %}
+
+{% block actionButton %}
+    <a href="{{ url('subscribr/gateways') }}" class="btn">{{ 'Gateways'|t('subscribr') }}</a>
+{% endblock %}
+
+{% block content %}
+    {% if not capable %}
+        <div class="pane">
+            <p class="error">
+                {{ 'No payment gateway in this store can take a payment, so nothing can renew.'|t('subscribr') }}
+                <a href="{{ url('subscribr/gateways') }}">{{ 'See what each gateway can do'|t('subscribr') }}</a>
+            </p>
+        </div>
+    {% endif %}
+
+    {{ parent() }}
+{% endblock %}

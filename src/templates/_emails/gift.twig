@@ -1,0 +1,19 @@
+{% extends 'subscribr/_emails/_layout' %}
+{% block body %}
+    <h1 style="font-size: 20px;">{{ 'Somebody has sent you a subscription'|t('subscribr') }}</h1>
+    <p>{{ '{name} has bought you {n, plural, =1{one delivery} other{# deliveries}}.'|t('subscribr', {
+        name: gift.senderName ?? 'Someone',
+        n: gift.cycles,
+    }) }}</p>
+    {% if gift.message %}
+        <blockquote style="border-left: 3px solid #ddd; margin: 20px 0; padding-left: 16px; color: #444;">{{ gift.message|nl2br }}</blockquote>
+    {% endif %}
+    <p>
+        <a href="{{ claimUrl }}" style="background: #1c1c1c; color: #fff; padding: 10px 18px; border-radius: 4px; text-decoration: none; display: inline-block;">
+            {{ 'Claim your gift'|t('subscribr') }}
+        </a>
+    </p>
+    <p style="color: #888; font-size: 13px;">
+        {{ 'It’s already paid for, and it won’t renew or charge you anything when it runs out.'|t('subscribr') }}
+    </p>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Plans'|t('subscribr') %}
+{% set crumbs = [{ label: 'Subscribr'|t('subscribr'), url: url('subscribr/subscriptions') }] %}
+
+{% block actionButton %}
+    <a href="{{ url('subscribr/plans/new') }}" class="btn submit add icon">{{ 'New plan'|t('subscribr') }}</a>
+{% endblock %}
+
+{% block content %}
+    {% if not capable %}
+        <p class="error">{{ 'No gateway in this store can take a payment, so no plan can renew yet.'|t('subscribr') }}
+            <a href="{{ url('subscribr/gateways') }}">{{ 'Check your gateways'|t('subscribr') }}</a></p>
+    {% endif %}
+
+    {% if plans|length %}
+        <table class="data fullwidth">
+            <thead>
+                <tr>
+                    <th>{{ 'Plan'|t('subscribr') }}</th>
+                    <th>{{ 'Cadence'|t('subscribr') }}</th>
+                    <th>{{ 'Trial'|t('subscribr') }}</th>
+                    <th>{{ 'Box'|t('subscribr') }}</th>
+                    <th>{{ 'Subscribers'|t('subscribr') }}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plan in plans %}
+                    <tr>
+                        <td>
+                            <a href="{{ plan.cpEditUrl }}">{{ plan.name }}</a>
+                            <code class="light">{{ plan.handle }}</code>
+                            {% if not plan.enabled %}<span class="light">({{ 'disabled'|t('subscribr') }})</span>{% endif %}
+                        </td>
+                        <td>{{ plan.describe }}</td>
+                        <td>{{ plan.trialDays ? '{n} days'|t('subscribr', { n: plan.trialDays }) : '—' }}</td>
+                        <td>{{ plan.box ? plan.box.name : '—' }}</td>
+                        <td>{{ counts[plan.id] ?? 0 }}</td>
+                        <td class="thin rightalign">
+                            <a href="{{ plan.cpEditUrl }}" class="btn small">{{ 'Edit'|t('subscribr') }}</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="zilch">
+            <p>{{ 'No plans yet. A plan is how often a product recurs, for how much, and what a subscriber may do to it.'|t('subscribr') }}</p>
+            <a href="{{ url('subscribr/plans/new') }}" class="btn submit">{{ 'Create one'|t('subscribr') }}</a>
+        </div>
+    {% endif %}
+{% endblock %}

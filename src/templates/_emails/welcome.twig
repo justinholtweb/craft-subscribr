@@ -1,0 +1,17 @@
+{% extends 'subscribr/_emails/_layout' %}
+{% block body %}
+    <h1 style="font-size: 20px;">{{ 'You’re all set'|t('subscribr') }}</h1>
+    <p>{{ 'Thanks for subscribing to {plan}.'|t('subscribr', { plan: subscription.plan.name ?? '' }) }}</p>
+    <p>
+        {% if subscription.isOnTrial %}
+            {{ 'Your free trial runs until {date}. You won’t be charged before then.'|t('subscribr', { date: subscription.dateTrialEnds|date('j F Y') }) }}
+        {% else %}
+            {{ 'Your next payment is {amount} on {date}, and then {cadence}.'|t('subscribr', {
+                amount: subscription.renewalPriceAsCurrency,
+                date: subscription.dateNextPayment|date('j F Y'),
+                cadence: subscription.cadence.describe,
+            }) }}
+        {% endif %}
+    </p>
+    <p>{{ 'You can pause, skip or cancel at any time from your account.'|t('subscribr') }}</p>
+{% endblock %}

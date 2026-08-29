@@ -1,0 +1,82 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% set crumbs = [
+    { label: 'Subscribr'|t('subscribr'), url: url('subscribr/subscriptions') },
+    { label: 'Dunning'|t('subscribr'), url: url('subscribr/dunning') },
+] %}
+{% set fullPageForm = true %}
+
+{% block content %}
+    {{ actionInput('subscribr/dunning/save') }}
+    {{ redirectInput('subscribr/dunning') }}
+    {% if profile.id %}{{ hiddenInput('profileId', profile.id) }}{% endif %}
+
+    {{ forms.textField({
+        first: true,
+        label: 'Name'|t('subscribr'),
+        id: 'name',
+        name: 'name',
+        value: profile.name,
+        errors: profile.getErrors('name'),
+        required: true,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Handle'|t('subscribr'),
+        id: 'handle',
+        name: 'handle',
+        class: 'code',
+        value: profile.handle,
+        errors: profile.getErrors('handle'),
+        required: true,
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: 'Use this as the store default'|t('subscribr'),
+        name: 'isDefault',
+        on: profile.isDefault,
+    }) }}
+
+    <hr>
+    <h2>{{ 'Stages'|t('subscribr') }}</h2>
+    <p class="light">
+        {{ 'Hours are measured from the first failure, not from the previous stage, so the whole timeline reads at a glance. The last stage should end the subscription one way or another; if none does, the store’s final action applies.'|t('subscribr') }}
+    </p>
+
+    {#
+       Two empty rows are appended so a sequence can always be extended. They post an empty
+       `action`, which the controller drops — a blank row that defaulted to "retry" would silently
+       add stages nobody asked for every time the form was saved.
+    #}
+    {% set blank = create('justinholtweb\\subscribr\\models\\DunningStage') %}
+    {% set existing = profile.stages|length %}
+    {% for i, stage in profile.stages|merge([blank, blank]) %}
+        {% set isBlank = i >= existing %}
+        <div class="pane">
+            <div class="flex">
+                {{ forms.textField({
+                    label: 'Hours after the failure'|t('subscribr'),
+                    name: 'stages[' ~ i ~ '][offsetHours]',
+                    value: isBlank ? '' : stage.offsetHours,
+                    type: 'number',
+                    min: 0,
+                    size: 5,
+                }) }}
+                {{ forms.selectField({
+                    label: 'Do this'|t('subscribr'),
+                    name: 'stages[' ~ i ~ '][action]',
+                    value: isBlank ? '' : stage.action,
+                    options: [{ value: '', label: '—' }]|merge(actions),
+                }) }}
+                {{ forms.textField({
+                    label: 'Email template'|t('subscribr'),
+                    instructions: 'Optional. Overrides the default message for this stage.'|t('subscribr'),
+                    name: 'stages[' ~ i ~ '][emailKey]',
+                    value: stage.emailKey,
+                    class: 'code',
+                }) }}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

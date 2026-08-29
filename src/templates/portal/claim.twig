@@ -1,0 +1,33 @@
+{% set gift = craft.subscribr.gift(token) %}
+{% if not gift %}{% exit 404 %}{% endif %}
+
+<h1>{{ 'You’ve been given a subscription'|t('subscribr') }}</h1>
+
+{% if gift.isClaimed %}
+    <p>{{ 'This gift has already been claimed.'|t('subscribr') }}</p>
+{% elseif gift.isExpired %}
+    <p>{{ 'This gift has expired. Please get in touch and we’ll sort it out.'|t('subscribr') }}</p>
+{% else %}
+    <p>{{ '{name} has bought you {n, plural, =1{one delivery} other{# deliveries}}.'|t('subscribr', {
+        name: gift.senderName ?? 'Someone',
+        n: gift.cycles,
+    }) }}</p>
+
+    {% if gift.message %}
+        <blockquote>{{ gift.message|nl2br }}</blockquote>
+    {% endif %}
+
+    {% if not currentUser %}
+        <p>{{ 'Sign in or create an account to claim it — it takes a moment and nothing is charged.'|t('subscribr') }}</p>
+    {% endif %}
+
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('subscribr/portal/claim') }}
+        {{ hiddenInput('token', gift.token) }}
+        {{ redirectInput(craft.app.request.pathInfo) }}
+        <button type="submit">{{ 'Claim my gift'|t('subscribr') }}</button>
+    </form>
+
+    <p><small>{{ 'It’s already paid for, and it won’t renew or charge you anything when it runs out.'|t('subscribr') }}</small></p>
+{% endif %}

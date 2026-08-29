@@ -1,0 +1,11 @@
+{% extends 'subscribr/_emails/_layout' %}
+{% block body %}
+    <h1 style="font-size: 20px;">{{ 'Your subscription has renewed'|t('subscribr') }}</h1>
+    {% if order %}
+        <p>{{ 'We’ve taken {amount} and your order {ref} is on its way.'|t('subscribr', {
+            amount: order.totalAsCurrency,
+            ref: order.reference ?? order.shortNumber,
+        }) }}</p>
+    {% endif %}
+    <p>{{ 'Your next payment is {date}.'|t('subscribr', { date: subscription.dateNextPayment|date('j F Y') }) }}</p>
+{% endblock %}

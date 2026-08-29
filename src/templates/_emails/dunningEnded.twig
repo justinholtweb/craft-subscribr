@@ -1,0 +1,8 @@
+{% extends 'subscribr/_emails/_layout' %}
+{% block body %}
+    <h1 style="font-size: 20px;">{{ 'Your subscription has ended'|t('subscribr') }}</h1>
+    <p>{{ 'We tried a few times but couldn’t take a payment, so we’ve stopped your {plan} subscription.'|t('subscribr', {
+        plan: subscription.plan.name ?? '',
+    }) }}</p>
+    <p>{{ 'You’re very welcome back whenever you like — nothing has been lost.'|t('subscribr') }}</p>
+{% endblock %}

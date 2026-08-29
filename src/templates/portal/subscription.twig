@@ -1,0 +1,225 @@
+{#
+   One subscription: skip, pause, swap, change plan, cancel.
+
+   Every button is rendered from `craft.subscribr.can()`, which is the same set of rules the
+   controller enforces — so a button is never shown for something the post would refuse.
+#}
+{% requireLogin %}
+
+{% set subscription = craft.subscribr.subscription(reference) %}
+{% if not subscription %}{% exit 404 %}{% endif %}
+
+{% set plan = subscription.plan %}
+{% set can = craft.subscribr.can(subscription) %}
+{% set lockReason = craft.subscribr.changeLockReason(subscription) %}
+{% set box = subscription.box %}
+{% set portalPath = craft.app.plugins.getPlugin('subscribr').settings.portalPath %}
+{% set redirect = portalPath ~ '/' ~ subscription.reference %}
+
+<h1>{{ subscription.name }}</h1>
+
+<p>
+    {{ subscription.renewalPriceAsCurrency }} {{ subscription.cadence.describe }}
+    — <strong>{{ subscription.status }}</strong>
+</p>
+
+{% if subscription.dateNextPayment %}
+    <p>{{ 'Your next order is {date}.'|t('subscribr', { date: subscription.dateNextPayment|date('j F Y') }) }}</p>
+{% endif %}
+
+{% if subscription.prepaidCyclesRemaining %}
+    <p>{{ '{n, plural, =1{One delivery} other{# deliveries}} already paid for.'|t('subscribr', { n: subscription.prepaidCyclesRemaining }) }}</p>
+{% endif %}
+
+{% if lockReason %}
+    <p><em>{{ lockReason }}</em></p>
+{% endif %}
+
+{# ---- What's in the next one ---- #}
+
+<h2>{{ 'Your next order'|t('subscribr') }}</h2>
+<ul>
+    {% for item in craft.subscribr.nextShipment(subscription) %}
+        <li>{{ item.qty }} × {{ item.description }}</li>
+    {% else %}
+        <li>{{ 'Nothing set yet.'|t('subscribr') }}</li>
+    {% endfor %}
+</ul>
+
+{# ---- Swap ---- #}
+
+{% if can.swap and box %}
+    <h2>{{ 'Change what’s in it'|t('subscribr') }}</h2>
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('subscribr/portal/swap') }}
+        {{ hiddenInput('subscription', subscription.reference) }}
+        {{ redirectInput(redirect) }}
+
+        {% for slot in box.slots %}
+            <fieldset>
+                <legend>{{ slot.name }} — {{ 'pick {min} to {max}'|t('subscribr', { min: slot.minItems, max: slot.maxItems }) }}</legend>
+                {% for variant in craft.variants.id(slot.purchasableIds).all() %}
+                    <label>
+                        <input type="number" min="0" max="{{ slot.maxItems }}" value="0"
+                               name="selection[{{ slot.id }}][{{ variant.id }}]">
+                        {{ variant.title }} — {{ variant.price|commerceCurrency(subscription.currency) }}
+                    </label>
+                {% endfor %}
+            </fieldset>
+        {% endfor %}
+
+        <label>
+            <input type="checkbox" name="permanent" value="1">
+            {{ 'Keep these for every future order, not just the next one'|t('subscribr') }}
+        </label>
+
+        <button type="submit">{{ 'Save these contents'|t('subscribr') }}</button>
+    </form>
+{% endif %}
+
+{# ---- Skip ---- #}
+
+{% if can.skip %}
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('subscribr/portal/skip') }}
+        {{ hiddenInput('subscription', subscription.reference) }}
+        {{ redirectInput(redirect) }}
+        <button type="submit">{{ 'Skip my next order'|t('subscribr') }}</button>
+    </form>
+{% endif %}
+
+{# ---- Pause / resume ---- #}
+
+{% if can.pause %}
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('subscribr/portal/pause') }}
+        {{ hiddenInput('subscription', subscription.reference) }}
+        {{ redirectInput(redirect) }}
+        <label>{{ 'Pause until'|t('subscribr') }} <input type="date" name="until"></label>
+        <button type="submit">{{ 'Pause'|t('subscribr') }}</button>
+    </form>
+{% endif %}
+
+{% if can.resume %}
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('subscribr/portal/resume') }}
+        {{ hiddenInput('subscription', subscription.reference) }}
+        {{ redirectInput(redirect) }}
+        <button type="submit">{{ 'Start again'|t('subscribr') }}</button>
+    </form>
+{% endif %}
+
+{# ---- Change plan, with the proration shown first ---- #}
+
+{% set options = craft.subscribr.switchOptions(subscription) %}
+{% if can.switch and options|length %}
+    <h2>{{ 'Change your plan'|t('subscribr') }}</h2>
+    {% for other in options %}
+        {% set proration = craft.subscribr.proration(subscription, other) %}
+        <form method="post" accept-charset="UTF-8">
+            {{ csrfInput() }}
+            {{ actionInput('subscribr/portal/switch') }}
+            {{ hiddenInput('subscription', subscription.reference) }}
+            {{ hiddenInput('plan', other.handle) }}
+            {{ redirectInput(redirect) }}
+
+            <h3>{{ other.name }}</h3>
+            <p>{{ other.describe }}</p>
+
+            <ul>
+                {% for line in proration.lines %}
+                    <li>
+                        {{ line.label }}
+                        {% if line.amount %}<strong>{{ proration.formatAmount(line.amount) }}</strong>{% endif %}
+                        {% if line.detail %}<small>{{ line.detail }}</small>{% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <p>
+                <strong>
+                    {% if proration.isFree %}
+                        {{ 'Nothing to pay today'|t('subscribr') }}
+                    {% elseif proration.isCredit %}
+                        {{ '{amount} credit towards your next payment'|t('subscribr', { amount: proration.formatAmount(proration.carriedCredit) }) }}
+                    {% else %}
+                        {{ '{amount} today'|t('subscribr', { amount: proration.formatAmount(proration.netDue) }) }}
+                    {% endif %}
+                </strong>
+            </p>
+
+            <button type="submit">{{ 'Move to {plan}'|t('subscribr', { plan: other.name }) }}</button>
+        </form>
+    {% endfor %}
+{% endif %}
+
+{# ---- Payment method ---- #}
+
+{% if can.updatePayment %}
+    {% set sources = craft.commerce.paymentSources.getAllPaymentSourcesByCustomerId(currentUser.id) %}
+    {% if sources|length %}
+        <h2>{{ 'Payment method'|t('subscribr') }}</h2>
+        <form method="post" accept-charset="UTF-8">
+            {{ csrfInput() }}
+            {{ actionInput('subscribr/portal/payment-source') }}
+            {{ hiddenInput('subscription', subscription.reference) }}
+            {{ redirectInput(redirect) }}
+            <select name="paymentSourceId">
+                {% for source in sources %}
+                    <option value="{{ source.id }}" {{ source.id == subscription.paymentSourceId ? 'selected' }}>
+                        {{ source.description }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit">{{ 'Use this card'|t('subscribr') }}</button>
+        </form>
+    {% endif %}
+{% endif %}
+
+{# ---- Cancel ---- #}
+
+{% if can.cancel %}
+    <h2>{{ 'Cancel'|t('subscribr') }}</h2>
+    {% if craft.app.plugins.getPlugin('subscribr').settings.offerPauseOnCancel and can.pause %}
+        <p>{{ 'Going away for a while? You can pause instead and keep your place.'|t('subscribr') }}</p>
+    {% endif %}
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('subscribr/portal/cancel') }}
+        {{ hiddenInput('subscription', subscription.reference) }}
+        {{ redirectInput(redirect) }}
+        {% set reasons = craft.subscribr.cancelReasons() %}
+        {% if reasons|length %}
+            <select name="reason">
+                {% for key, label in reasons %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+            </select>
+        {% endif %}
+        <button type="submit">{{ 'Cancel my subscription'|t('subscribr') }}</button>
+    </form>
+{% endif %}
+
+{% if can.uncancel %}
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('subscribr/portal/uncancel') }}
+        {{ hiddenInput('subscription', subscription.reference) }}
+        {{ redirectInput(redirect) }}
+        <button type="submit">{{ 'Actually, keep it going'|t('subscribr') }}</button>
+    </form>
+{% endif %}
+
+{# ---- History ---- #}
+
+<h2>{{ 'History'|t('subscribr') }}</h2>
+<ul>
+    {% for entry in craft.subscribr.history(subscription) %}
+        <li>
+            <time datetime="{{ entry.dateCreated|atom }}">{{ entry.dateCreated|date('j M Y') }}</time>
+            — {{ entry.message }}
+        </li>
+    {% endfor %}
+</ul>

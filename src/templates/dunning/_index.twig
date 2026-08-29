@@ -1,0 +1,135 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Dunning'|t('subscribr') %}
+{% set crumbs = [{ label: 'Subscribr'|t('subscribr'), url: url('subscribr/subscriptions') }] %}
+
+{% block actionButton %}
+    <form method="post" accept-charset="UTF-8" style="display: inline;">
+        {{ csrfInput() }}
+        {{ actionInput('subscribr/dunning/run-now') }}
+        {{ redirectInput('subscribr/dunning') }}
+        <button type="submit" class="btn">{{ 'Run the retries now'|t('subscribr') }}</button>
+    </form>
+    {% if profilesEnabled %}
+        <a href="{{ url('subscribr/dunning/profiles/new') }}" class="btn submit add icon">{{ 'New sequence'|t('subscribr') }}</a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="pane">
+        <ul class="subscribr-stats">
+            <li>
+                <span class="subscribr-stat {{ summary.atRisk > 0 ? 'error' : '' }}">{{ summary.atRisk|commerceCurrency(craft.commerce.paymentCurrencies.primaryPaymentCurrencyIso) }}</span>
+                <span class="light">{{ 'at risk right now'|t('subscribr') }}</span>
+            </li>
+            <li>
+                <span class="subscribr-stat">{{ summary.pastDueCount }}</span>
+                <span class="light">{{ 'past due'|t('subscribr') }}</span>
+            </li>
+            <li>
+                <span class="subscribr-stat">{{ summary.failedAttempts }}</span>
+                <span class="light">{{ 'failed attempts, {n} days'|t('subscribr', { n: days }) }}</span>
+            </li>
+            <li>
+                <span class="subscribr-stat">{{ summary.recoveryRate is null ? '—' : summary.recoveryRate ~ '%' }}</span>
+                <span class="light">{{ 'recovered'|t('subscribr') }}</span>
+            </li>
+        </ul>
+        <p class="light">
+            {{ 'Recovery is counted per subscription, not per attempt — three retries against one card is one customer, not three.'|t('subscribr') }}
+        </p>
+    </div>
+
+    <div class="pane">
+        <h2>{{ 'Waiting on a retry'|t('subscribr') }}</h2>
+        {% if atRisk|length %}
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th>{{ 'Subscription'|t('subscribr') }}</th>
+                        <th>{{ 'Subscriber'|t('subscribr') }}</th>
+                        <th>{{ 'Amount'|t('subscribr') }}</th>
+                        <th>{{ 'Failures'|t('subscribr') }}</th>
+                        <th>{{ 'Next attempt'|t('subscribr') }}</th>
+                        <th>{{ 'Why it failed'|t('subscribr') }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subscription in atRisk %}
+                        <tr>
+                            <td><a href="{{ subscription.cpEditUrl }}"><code>{{ subscription.reference }}</code></a></td>
+                            <td>{{ subscription.subscriber ?? 'Guest'|t('subscribr') }}</td>
+                            <td>{{ subscription.renewalPriceAsCurrency }}</td>
+                            <td>{{ subscription.failureCount }}</td>
+                            <td class="nowrap">{{ subscription.dateNextRetry ? subscription.dateNextRetry|datetime('short') : '—' }}</td>
+                            <td class="light">{{ subscription.lastFailureMessage|slice(0, 90) }}</td>
+                            <td class="thin rightalign">
+                                <form method="post" accept-charset="UTF-8">
+                                    {{ csrfInput() }}
+                                    {{ actionInput('subscribr/subscriptions/retry') }}
+                                    {{ hiddenInput('subscriptionId', subscription.id) }}
+                                    {{ redirectInput('subscribr/dunning') }}
+                                    <button type="submit" class="btn small">{{ 'Retry'|t('subscribr') }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="light">{{ 'Nothing is past due. '|t('subscribr') }}</p>
+        {% endif %}
+    </div>
+
+    <div class="pane">
+        <h2>{{ 'Sequences'|t('subscribr') }}</h2>
+        {% if profilesEnabled and profiles|length %}
+            <table class="data fullwidth">
+                <thead><tr><th>{{ 'Name'|t('subscribr') }}</th><th>{{ 'Stages'|t('subscribr') }}</th><th>{{ 'Runs for'|t('subscribr') }}</th><th></th></tr></thead>
+                <tbody>
+                    {% for profile in profiles %}
+                        <tr>
+                            <td><a href="{{ profile.cpEditUrl }}">{{ profile.name }}</a>{% if profile.isDefault %} <span class="light">({{ 'default'|t('subscribr') }})</span>{% endif %}</td>
+                            <td>{{ profile.stageCount }}</td>
+                            <td>{{ '{n} hours'|t('subscribr', { n: profile.totalHours }) }}</td>
+                            <td class="thin rightalign"><a href="{{ profile.cpEditUrl }}" class="btn small">{{ 'Edit'|t('subscribr') }}</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        <h3>{{ 'The store default'|t('subscribr') }}</h3>
+        <p class="light">
+            {{ 'Used by any plan with no sequence of its own. Edit it in'|t('subscribr') }}
+            <a href="{{ url('subscribr/settings') }}">{{ 'the settings'|t('subscribr') }}</a>.
+        </p>
+        <table class="data fullwidth">
+            <thead><tr><th>{{ 'After'|t('subscribr') }}</th><th>{{ 'Then'|t('subscribr') }}</th></tr></thead>
+            <tbody>
+                {% for stage in fallback.stages %}
+                    <tr>
+                        <td class="thin nowrap">{{ '{n} hours'|t('subscribr', { n: stage.offsetHours }) }}</td>
+                        <td>{{ stage.action }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if not profilesEnabled %}
+            <p class="light">{{ 'Named sequences, so that different plans can chase differently, are a Pro feature.'|t('subscribr') }}</p>
+        {% endif %}
+    </div>
+
+    <div class="pane">
+        <h2>{{ 'Recent activity'|t('subscribr') }}</h2>
+        {% set history = recent %}
+        {% include 'subscribr/_includes/_timeline' %}
+    </div>
+
+    <style>
+        .subscribr-stats { display: flex; gap: 32px; }
+        .subscribr-stats li { list-style: none; }
+        .subscribr-stat { display: block; font-size: 26px; font-weight: 600; line-height: 1.2; }
+    </style>
+{% endblock %}

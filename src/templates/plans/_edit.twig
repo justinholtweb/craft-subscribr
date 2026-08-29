@@ -1,0 +1,252 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% set crumbs = [
+    { label: 'Subscribr'|t('subscribr'), url: url('subscribr/subscriptions') },
+    { label: 'Plans'|t('subscribr'), url: url('subscribr/plans') },
+] %}
+{% set fullPageForm = true %}
+{% set saveShortcutRedirect = 'subscribr/plans/{id}' %}
+
+{% block content %}
+    {{ actionInput('subscribr/plans/save') }}
+    {{ redirectInput('subscribr/plans') }}
+    {% if plan.id %}{{ hiddenInput('planId', plan.id) }}{% endif %}
+
+    {{ forms.textField({
+        first: true,
+        label: 'Name'|t('subscribr'),
+        id: 'name',
+        name: 'name',
+        value: plan.name,
+        errors: plan.getErrors('name'),
+        required: true,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Handle'|t('subscribr'),
+        instructions: 'Used in the cart, in templates, and by `subscribr/plans import`.'|t('subscribr'),
+        id: 'handle',
+        name: 'handle',
+        class: 'code',
+        value: plan.handle,
+        errors: plan.getErrors('handle'),
+        required: true,
+    }) }}
+
+    {{ forms.textareaField({
+        label: 'Description'|t('subscribr'),
+        name: 'description',
+        value: plan.description,
+        rows: 2,
+    }) }}
+
+    <hr>
+    <h2>{{ 'Cadence'|t('subscribr') }}</h2>
+
+    <div class="flex">
+        {{ forms.textField({
+            label: 'Every'|t('subscribr'),
+            name: 'intervalCount',
+            value: plan.intervalCount,
+            type: 'number',
+            min: 1,
+            size: 4,
+            errors: plan.getErrors('intervalCount'),
+        }) }}
+        {{ forms.selectField({
+            label: 'Unit'|t('subscribr'),
+            name: 'interval',
+            value: plan.interval,
+            options: intervals,
+            errors: plan.getErrors('interval'),
+        }) }}
+        {{ forms.textField({
+            label: 'Billing day'|t('subscribr'),
+            instructions: 'Leave empty to bill on the anniversary of each signup. 1–28 for monthly plans, 0–6 for weekly ones.'|t('subscribr'),
+            name: 'anchorDay',
+            value: plan.anchorDay,
+            type: 'number',
+            size: 4,
+            errors: plan.getErrors('anchorDay'),
+        }) }}
+    </div>
+
+    {{ forms.textField({
+        label: 'Free trial'|t('subscribr'),
+        instructions: 'Days before the first payment. Zero for none.'|t('subscribr'),
+        name: 'trialDays',
+        value: plan.trialDays,
+        type: 'number',
+        min: 0,
+        size: 5,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Number of cycles'|t('subscribr'),
+        instructions: 'Zero renews until the subscriber cancels. Anything else is a fixed term that ends by itself.'|t('subscribr'),
+        name: 'maxCycles',
+        value: plan.maxCycles,
+        type: 'number',
+        min: 0,
+        size: 5,
+    }) }}
+
+    <hr>
+    <h2>{{ 'Price'|t('subscribr') }}</h2>
+
+    {{ forms.selectField({
+        label: 'Recurring price'|t('subscribr'),
+        name: 'pricingMode',
+        value: plan.pricingMode,
+        options: [
+            { value: 'inherit', label: 'Whatever the product costs at renewal time'|t('subscribr') },
+            { value: 'locked', label: 'Whatever it cost when they signed up'|t('subscribr') },
+            { value: 'override', label: 'A fixed plan price'|t('subscribr') },
+        ],
+        instructions: '“Locked” is what a subscriber means by “price for life”. “Inherit” means a catalogue price rise reaches existing subscribers at their next renewal.'|t('subscribr'),
+    }) }}
+
+    {{ forms.textField({
+        label: 'Plan price'|t('subscribr'),
+        name: 'planPrice',
+        value: plan.planPrice,
+        type: 'number',
+        step: 'any',
+        size: 8,
+        errors: plan.getErrors('planPrice'),
+    }) }}
+
+    {{ forms.textField({
+        label: 'Subscriber discount'|t('subscribr'),
+        instructions: 'A percentage off the price, every cycle.'|t('subscribr'),
+        name: 'discountPercent',
+        value: plan.discountPercent,
+        type: 'number',
+        step: 'any',
+        size: 6,
+        suffix: '%',
+    }) }}
+
+    {{ forms.textField({
+        label: 'Joining fee'|t('subscribr'),
+        instructions: 'Charged once, on the first order.'|t('subscribr'),
+        name: 'signupFee',
+        value: plan.signupFee,
+        type: 'number',
+        step: 'any',
+        size: 8,
+    }) }}
+
+    <hr>
+    <h2>{{ 'What subscribers may do'|t('subscribr') }}</h2>
+
+    {{ forms.lightswitchField({ label: 'Pause'|t('subscribr'), name: 'allowPause', on: plan.allowPause }) }}
+    {{ forms.textField({
+        label: 'Longest pause'|t('subscribr'),
+        instructions: 'In cycles. Zero for no limit.'|t('subscribr'),
+        name: 'maxPauseCycles',
+        value: plan.maxPauseCycles,
+        type: 'number',
+        min: 0,
+        size: 4,
+    }) }}
+    {{ forms.lightswitchField({ label: 'Cancel'|t('subscribr'), name: 'allowCancel', on: plan.allowCancel }) }}
+    {{ forms.lightswitchField({ label: 'Change the quantity'|t('subscribr'), name: 'allowQuantityChange', on: plan.allowQuantityChange }) }}
+
+    {{ forms.selectField({
+        label: 'When they cancel'|t('subscribr'),
+        name: 'cancelMode',
+        value: plan.cancelMode,
+        options: [
+            { value: 'end', label: 'Keep going until the period they’ve paid for runs out'|t('subscribr') },
+            { value: 'immediate', label: 'Stop straight away'|t('subscribr') },
+        ],
+    }) }}
+
+    {% if isPro %}
+        <hr>
+        <h2>{{ 'Pro'|t('subscribr') }}</h2>
+
+        {{ forms.lightswitchField({ label: 'Skip a cycle'|t('subscribr'), name: 'allowSkip', on: plan.allowSkip }) }}
+        {{ forms.textField({
+            label: 'Skips a year'|t('subscribr'),
+            instructions: 'Zero for no limit.'|t('subscribr'),
+            name: 'maxSkipsPerYear',
+            value: plan.maxSkipsPerYear,
+            type: 'number',
+            min: 0,
+            size: 4,
+        }) }}
+        {{ forms.lightswitchField({ label: 'Swap what’s in a shipment'|t('subscribr'), name: 'allowSwap', on: plan.allowSwap }) }}
+        {{ forms.lightswitchField({ label: 'Change plan'|t('subscribr'), name: 'allowSwitch', on: plan.allowSwitch }) }}
+        {{ forms.lightswitchField({ label: 'Buy as a gift'|t('subscribr'), name: 'allowGift', on: plan.allowGift }) }}
+
+        {{ forms.selectField({
+            label: 'When they change plan'|t('subscribr'),
+            name: 'switchMode',
+            value: plan.switchMode,
+            options: [
+                { value: 'prorate', label: 'Work out the difference and charge it now'|t('subscribr') },
+                { value: 'end', label: 'Wait until the next renewal'|t('subscribr') },
+            ],
+        }) }}
+
+        {{ forms.textField({
+            label: 'Switch group'|t('subscribr'),
+            instructions: 'Plans sharing a group may be switched between. Leave empty to allow any plan.'|t('subscribr'),
+            name: 'switchGroup',
+            value: plan.switchGroup,
+            class: 'code',
+        }) }}
+
+        {{ forms.textField({
+            label: 'Prepay options'|t('subscribr'),
+            instructions: 'Cycle counts a subscriber may pay up front for, comma separated — for example `3, 6, 12`. Leave empty to switch prepayment off.'|t('subscribr'),
+            name: 'prepaidOptions',
+            value: plan.prepaidOptions,
+            class: 'code',
+        }) }}
+
+        {{ forms.textField({
+            label: 'Prepay discount'|t('subscribr'),
+            name: 'prepaidDiscountPercent',
+            value: plan.prepaidDiscountPercent,
+            type: 'number',
+            step: 'any',
+            size: 6,
+            suffix: '%',
+        }) }}
+
+        {{ forms.selectField({
+            label: 'Box'|t('subscribr'),
+            instructions: 'What ships each cycle, if this plan is a subscription box.'|t('subscribr'),
+            name: 'boxId',
+            value: plan.boxId,
+            options: [{ value: '', label: 'None'|t('subscribr') }]|merge(boxes|map(b => { value: b.id, label: b.name })),
+        }) }}
+
+        {{ forms.selectField({
+            label: 'Dunning sequence'|t('subscribr'),
+            instructions: 'What happens when a payment fails. Leave on the store default unless this plan needs its own.'|t('subscribr'),
+            name: 'dunningId',
+            value: plan.dunningId,
+            options: [{ value: '', label: 'Store default'|t('subscribr') }]|merge(profiles|map(p => { value: p.id, label: p.name })),
+        }) }}
+    {% else %}
+        <hr>
+        <p class="light">
+            {{ 'Subscription boxes, skip and swap, prepaid and gift plans, plan switching and dunning sequences are Pro features.'|t('subscribr') }}
+        </p>
+    {% endif %}
+
+    <hr>
+    {{ forms.lightswitchField({ label: 'Shippable'|t('subscribr'), instructions: 'Renewal orders pick a shipping method.'|t('subscribr'), name: 'shippable', on: plan.shippable }) }}
+    {{ forms.lightswitchField({ label: 'Enabled'|t('subscribr'), instructions: 'A disabled plan takes no new subscribers. Existing ones carry on exactly as before.'|t('subscribr'), name: 'enabled', on: plan.enabled }) }}
+
+    {% if plan.id and subscriberCount %}
+        <p class="light">
+            {{ '{n, plural, =1{One subscriber is} other{# subscribers are}} on this plan.'|t('subscribr', { n: subscriberCount }) }}
+        </p>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Boxes'|t('subscribr') %}
+{% set crumbs = [{ label: 'Subscribr'|t('subscribr'), url: url('subscribr/subscriptions') }] %}
+
+{% block actionButton %}
+    <a href="{{ url('subscribr/boxes/new') }}" class="btn submit add icon">{{ 'New box'|t('subscribr') }}</a>
+{% endblock %}
+
+{% block content %}
+    {% if boxes|length %}
+        <table class="data fullwidth">
+            <thead>
+                <tr>
+                    <th>{{ 'Box'|t('subscribr') }}</th>
+                    <th>{{ 'Filled by'|t('subscribr') }}</th>
+                    <th>{{ 'Priced'|t('subscribr') }}</th>
+                    <th>{{ 'Slots'|t('subscribr') }}</th>
+                    <th>{{ 'Locks'|t('subscribr') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for box in boxes %}
+                    <tr>
+                        <td><a href="{{ box.cpEditUrl }}">{{ box.name }}</a> <code class="light">{{ box.handle }}</code></td>
+                        <td>{{ box.mode == 'choice' ? 'the subscriber'|t('subscribr') : (box.mode == 'surprise' ? 'at random'|t('subscribr') : 'you'|t('subscribr')) }}</td>
+                        <td>{{ box.pricing == 'contents' ? 'by contents'|t('subscribr') : (box.pricing == 'fixed' ? 'fixed'|t('subscribr') : 'base + add-ons'|t('subscribr')) }}</td>
+                        <td>{{ box.slots|length }}</td>
+                        <td>{{ '{n}h before shipping'|t('subscribr', { n: box.lockHours }) }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="zilch">
+            <p>{{ 'A box is a set of slots and a rule for filling them — “pick two coffees and a mug”, or “a surprise selection every month”.'|t('subscribr') }}</p>
+            <a href="{{ url('subscribr/boxes/new') }}" class="btn submit">{{ 'Create one'|t('subscribr') }}</a>
+        </div>
+    {% endif %}
+{% endblock %}

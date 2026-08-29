@@ -1,0 +1,213 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% set title = 'Subscribr settings'|t('subscribr') %}
+{% set crumbs = [{ label: 'Subscribr'|t('subscribr'), url: url('subscribr/subscriptions') }] %}
+{% set fullPageForm = true %}
+
+{% block content %}
+    {{ actionInput('subscribr/settings/save') }}
+    {{ redirectInput('subscribr/settings') }}
+
+    {% if not capable %}
+        <p class="error">{{ 'No gateway in this store can take a payment.'|t('subscribr') }}
+            <a href="{{ url('subscribr/gateways') }}">{{ 'See why'|t('subscribr') }}</a></p>
+    {% endif %}
+
+    {% if suppressed %}
+        <p class="warning">
+            {{ 'This install is on Lite, but there is Pro configuration in the database — boxes, dunning sequences, or plans attached to a box. None of it is being applied. Upgrade to Pro to bring it back, or clear it out.'|t('subscribr') }}
+        </p>
+    {% endif %}
+
+    <h2>{{ 'Renewals'|t('subscribr') }}</h2>
+
+    {{ forms.lightswitchField({
+        label: 'Renew automatically'|t('subscribr'),
+        instructions: 'Off means renewals only happen when `subscribr/renewals/run` is called. Switch it off on a staging clone of a production database.'|t('subscribr'),
+        name: 'settings[autoRenew]',
+        on: settings.autoRenew,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Renewals per run'|t('subscribr'),
+        instructions: 'A renewal is a payment, and a runaway loop is a lot of payments.'|t('subscribr'),
+        name: 'settings[renewalBatchSize]',
+        value: settings.renewalBatchSize,
+        type: 'number',
+        min: 1,
+        size: 5,
+        errors: settings.getErrors('renewalBatchSize'),
+    }) }}
+
+    {{ forms.textField({
+        label: 'Raise renewal orders early'|t('subscribr'),
+        instructions: 'Hours. A box store usually wants a day or two so pick-and-pack has the order before the shipment is due. It moves the order, never the schedule.'|t('subscribr'),
+        name: 'settings[renewalLeadHours]',
+        value: settings.renewalLeadHours,
+        type: 'number',
+        min: 0,
+        size: 5,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Catch-up window'|t('subscribr'),
+        instructions: 'Days. Past this a missed cycle is not billed at all — which is what stops a queue that was off for a month from charging everyone six times when it comes back.'|t('subscribr'),
+        name: 'settings[renewalCatchUpDays]',
+        value: settings.renewalCatchUpDays,
+        type: 'number',
+        min: 0,
+        size: 5,
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: 'Bill missed cycles'|t('subscribr'),
+        instructions: 'Off is the safe default. Nobody wants a surprise triple charge.'|t('subscribr'),
+        name: 'settings[billMissedCycles]',
+        on: settings.billMissedCycles,
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: 'Capture authorised renewals'|t('subscribr'),
+        instructions: 'Commerce picks authorise or purchase from the gateway’s own configuration, and a subscription that is only ever authorised is never actually paid.'|t('subscribr'),
+        name: 'settings[captureAuthorizedRenewals]',
+        on: settings.captureAuthorizedRenewals,
+    }) }}
+
+    {{ forms.selectField({
+        label: 'Status for paid renewals'|t('subscribr'),
+        name: 'settings[renewalOrderStatus]',
+        value: settings.renewalOrderStatus,
+        options: [{ value: '', label: 'Commerce’s default'|t('subscribr') }]|merge(orderStatuses),
+    }) }}
+
+    <hr>
+    <h2>{{ 'Dunning'|t('subscribr') }}</h2>
+
+    {{ forms.lightswitchField({
+        label: 'Retry failed payments'|t('subscribr'),
+        name: 'settings[enableDunning]',
+        on: settings.enableDunning,
+    }) }}
+
+    {{ forms.editableTableField({
+        label: 'Default retry schedule'|t('subscribr'),
+        instructions: 'Hours after the first failure. Used by any plan with no sequence of its own.'|t('subscribr'),
+        name: 'settings[defaultRetryHours]',
+        cols: {
+            hours: { heading: 'Hours'|t('subscribr'), type: 'number', width: 120 },
+        },
+        rows: settings.defaultRetryHours|map(h => { hours: h }),
+        addRowLabel: 'Add a retry'|t('subscribr'),
+    }) }}
+
+    {{ forms.selectField({
+        label: 'When the retries run out'|t('subscribr'),
+        name: 'settings[dunningFinalAction]',
+        value: settings.dunningFinalAction,
+        options: [
+            { value: 'cancel', label: 'Cancel the subscription'|t('subscribr') },
+            { value: 'pause', label: 'Pause it — keep the customer, stop the deliveries'|t('subscribr') },
+            { value: 'expire', label: 'End it'|t('subscribr') },
+        ],
+    }) }}
+
+    <hr>
+    <h2>{{ 'Self-service'|t('subscribr') }}</h2>
+
+    {{ forms.lightswitchField({
+        label: 'Subscriber portal'|t('subscribr'),
+        name: 'settings[enablePortal]',
+        on: settings.enablePortal,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Portal path'|t('subscribr'),
+        name: 'settings[portalPath]',
+        value: settings.portalPath,
+        class: 'code',
+    }) }}
+
+    {{ forms.textField({
+        label: 'Gift claim path'|t('subscribr'),
+        instructions: '`{token}` is replaced with the claim token.'|t('subscribr'),
+        name: 'settings[giftClaimPath]',
+        value: settings.giftClaimPath,
+        class: 'code',
+    }) }}
+
+    {{ forms.textField({
+        label: 'Change cut-off'|t('subscribr'),
+        instructions: 'Hours before a renewal, after which the subscriber can no longer change it. Shown as locked rather than failing after they’ve made the change.'|t('subscribr'),
+        name: 'settings[changeLockHours]',
+        value: settings.changeLockHours,
+        type: 'number',
+        min: 0,
+        size: 5,
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: 'Offer a pause before accepting a cancellation'|t('subscribr'),
+        instructions: 'A paused subscriber is a customer you still have.'|t('subscribr'),
+        name: 'settings[offerPauseOnCancel]',
+        on: settings.offerPauseOnCancel,
+    }) }}
+
+    {{ forms.editableTableField({
+        label: 'Cancellation reasons'|t('subscribr'),
+        instructions: 'Offered in the portal. Leave empty to skip the question.'|t('subscribr'),
+        name: 'settings[cancelReasons]',
+        cols: {
+            key: { heading: 'Key'|t('subscribr'), type: 'singleline', code: true, width: 200 },
+            label: { heading: 'Shown as'|t('subscribr'), type: 'singleline' },
+        },
+        rows: settings.cancelReasons|keys|map(k => { key: k, label: settings.cancelReasons[k] }),
+        addRowLabel: 'Add a reason'|t('subscribr'),
+    }) }}
+
+    <hr>
+    <h2>{{ 'Boxes'|t('subscribr') }}</h2>
+
+    {{ forms.lightswitchField({
+        label: 'Ship the defaults when nobody chose'|t('subscribr'),
+        instructions: 'Right for a curation business, wrong for one where every item is an allergy question — which is why it is a setting.'|t('subscribr'),
+        name: 'settings[shipDefaultsWhenUnchosen]',
+        on: settings.shipDefaultsWhenUnchosen,
+    }) }}
+
+    <hr>
+    <h2>{{ 'Email'|t('subscribr') }}</h2>
+
+    {{ forms.lightswitchField({
+        label: 'Send subscriber emails'|t('subscribr'),
+        name: 'settings[sendEmails]',
+        on: settings.sendEmails,
+    }) }}
+
+    {{ forms.autosuggestField({
+        label: 'From address'|t('subscribr'),
+        instructions: 'Leave empty to use the system default.'|t('subscribr'),
+        name: 'settings[emailFromAddress]',
+        value: settings.emailFromAddress,
+        suggestEnvVars: true,
+        errors: settings.getErrors('emailFromAddress'),
+    }) }}
+
+    {{ forms.textField({
+        label: 'From name'|t('subscribr'),
+        name: 'settings[emailFromName]',
+        value: settings.emailFromName,
+    }) }}
+
+    {{ forms.editableTableField({
+        label: 'Template overrides'|t('subscribr'),
+        instructions: 'Point any message at a template of your own. Anything left out keeps Subscribr’s.'|t('subscribr'),
+        name: 'settings[emailTemplates]',
+        cols: {
+            key: { heading: 'Message'|t('subscribr'), type: 'singleline', code: true, width: 220 },
+            template: { heading: 'Template'|t('subscribr'), type: 'singleline', code: true },
+        },
+        rows: settings.emailTemplates|keys|map(k => { key: k, template: settings.emailTemplates[k] }),
+        addRowLabel: 'Add an override'|t('subscribr'),
+    }) }}
+{% endblock %}

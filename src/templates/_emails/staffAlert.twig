@@ -1,0 +1,12 @@
+{% extends 'subscribr/_emails/_layout' %}
+{% block body %}
+    <h1 style="font-size: 20px;">{{ 'A subscription needs attention'|t('subscribr') }}</h1>
+    <p>
+        <strong>{{ subscription.reference }}</strong> — {{ subscription.subscriber ?? 'guest' }}<br>
+        {{ subscription.renewalPriceAsCurrency }} {{ subscription.cadence.describe }}
+    </p>
+    {% if subscription.lastFailureMessage %}
+        <p>{{ subscription.lastFailureMessage }}</p>
+    {% endif %}
+    <p><a href="{{ subscription.cpEditUrl }}">{{ 'Open in the control panel'|t('subscribr') }}</a></p>
+{% endblock %}

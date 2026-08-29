@@ -1,0 +1,35 @@
+{#
+   The subscriber's list of subscriptions.
+
+   A working reference implementation, not a design. Copy it into your own
+   `templates/subscribr/portal/` and it takes precedence over this one.
+#}
+{% requireLogin %}
+
+{% set subscriptions = craft.subscribr.mine(false) %}
+
+<h1>{{ 'Your subscriptions'|t('subscribr') }}</h1>
+
+{% if not subscriptions|length %}
+    <p>{{ 'You don’t have any subscriptions yet.'|t('subscribr') }}</p>
+{% endif %}
+
+{% for subscription in subscriptions %}
+    {% set plan = subscription.plan %}
+    <article>
+        <h2>
+            <a href="{{ url(craft.app.plugins.getPlugin('subscribr').settings.portalPath ~ '/' ~ subscription.reference) }}">
+                {{ subscription.name }}
+            </a>
+        </h2>
+        <p>
+            {{ subscription.renewalPriceAsCurrency }} {{ subscription.cadence.describe }}
+            — <strong>{{ subscription.status }}</strong>
+        </p>
+        {% if subscription.dateNextPayment %}
+            <p>{{ 'Next order {date}'|t('subscribr', { date: subscription.dateNextPayment|date('j F Y') }) }}</p>
+        {% elseif subscription.dateEnds %}
+            <p>{{ 'Runs until {date}'|t('subscribr', { date: subscription.dateEnds|date('j F Y') }) }}</p>
+        {% endif %}
+    </article>
+{% endfor %}

@@ -1,0 +1,14 @@
+{% extends 'subscribr/_emails/_layout' %}
+{% block body %}
+    <h1 style="font-size: 20px;">{{ 'We couldn’t take your payment'|t('subscribr') }}</h1>
+    <p>
+        {{ 'Your card was declined for your {plan} subscription. This is usually an expired card rather than anything to worry about.'|t('subscribr', {
+            plan: subscription.plan.name ?? '',
+        }) }}
+    </p>
+    {% if subscription.dateNextRetry %}
+        <p>{{ 'We’ll try again on {date}. Updating your card before then will sort it out straight away.'|t('subscribr', {
+            date: subscription.dateNextRetry|date('j F Y'),
+        }) }}</p>
+    {% endif %}
+{% endblock %}

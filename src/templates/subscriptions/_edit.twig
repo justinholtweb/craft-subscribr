@@ -1,0 +1,281 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% set title = subscription.name %}
+{% set crumbs = [
+    { label: 'Subscribr'|t('subscribr'), url: url('subscribr/subscriptions') },
+    { label: 'Subscriptions'|t('subscribr'), url: url('subscribr/subscriptions') },
+] %}
+
+{% set status = subscription.status %}
+
+{% block content %}
+    <div class="pane">
+        <div class="flex flex-nowrap" style="justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h2 style="margin: 0;">
+                    <code>{{ subscription.reference }}</code>
+                    <span class="status {{ status == 'active' ? 'green' : (status in ['pastDue', 'canceled'] ? 'orange' : (status == 'expired' ? 'red' : 'grey')) }}"></span>
+                    {{ subscription.statuses[status].label ?? status }}
+                </h2>
+                <p class="light" style="margin-top: 4px;">
+                    {% if plan %}<a href="{{ plan.cpEditUrl }}">{{ plan.name }}</a> · {% endif %}
+                    {{ subscription.cadence.describe }}
+                    · {{ subscription.renewalPriceAsCurrency }}
+                    {% if subscription.quantity > 1 %} × {{ subscription.quantity }}{% endif %}
+                </p>
+            </div>
+            <div>
+                {% if subscription.subscriber %}
+                    <a href="{{ subscription.subscriber.cpEditUrl }}" class="btn">{{ subscription.subscriber }}</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if subscription.lastFailureMessage %}
+        <div class="pane">
+            <p class="error">
+                <strong>{{ 'Last payment failed'|t('subscribr') }}:</strong> {{ subscription.lastFailureMessage }}
+                {% if subscription.dateNextRetry %}
+                    <br>{{ 'Next attempt {date} (stage {n}).'|t('subscribr', { date: subscription.dateNextRetry|datetime('short'), n: subscription.dunningStage + 1 }) }}
+                {% endif %}
+            </p>
+            {% if canBill %}
+                <form method="post" accept-charset="UTF-8">
+                    {{ csrfInput() }}
+                    {{ actionInput('subscribr/subscriptions/retry') }}
+                    {{ hiddenInput('subscriptionId', subscription.id) }}
+                    {{ redirectInput('subscribr/subscriptions/' ~ subscription.id) }}
+                    <button type="submit" class="btn submit">{{ 'Retry the payment now'|t('subscribr') }}</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="pane">
+        <h2>{{ 'Schedule'|t('subscribr') }}</h2>
+        <table class="data fullwidth">
+            <tbody>
+                <tr><th class="thin">{{ 'Started'|t('subscribr') }}</th><td>{{ subscription.dateStarted ? subscription.dateStarted|datetime('short') : '—' }}</td></tr>
+                <tr><th>{{ 'Current period began'|t('subscribr') }}</th><td>{{ subscription.dateCurrentPeriodStart ? subscription.dateCurrentPeriodStart|datetime('short') : '—' }}</td></tr>
+                <tr><th>{{ 'Next payment'|t('subscribr') }}</th><td>
+                    {{ subscription.dateNextPayment ? subscription.dateNextPayment|datetime('short') : '—' }}
+                    {% if subscription.daysUntilRenewal is not null %}
+                        <span class="light">({{ '{n, plural, =0{today} =1{tomorrow} other{in # days}}'|t('subscribr', { n: subscription.daysUntilRenewal }) }})</span>
+                    {% endif %}
+                </td></tr>
+                {% if subscription.dateTrialEnds %}
+                    <tr><th>{{ 'Trial ends'|t('subscribr') }}</th><td>{{ subscription.dateTrialEnds|datetime('short') }}</td></tr>
+                {% endif %}
+                {% if subscription.dateEnds %}
+                    <tr><th>{{ 'Runs until'|t('subscribr') }}</th><td>{{ subscription.dateEnds|datetime('short') }}</td></tr>
+                {% endif %}
+                <tr><th>{{ 'Cycles billed'|t('subscribr') }}</th><td>{{ subscription.cycleCount }}{% if plan and plan.maxCycles %} / {{ plan.maxCycles }}{% endif %}</td></tr>
+                {% if subscription.prepaidCyclesRemaining %}
+                    <tr><th>{{ 'Prepaid cycles left'|t('subscribr') }}</th><td>{{ subscription.prepaidCyclesRemaining }}</td></tr>
+                {% endif %}
+                <tr><th>{{ 'Renews via'|t('subscribr') }}</th><td>
+                    {% if capability %}
+                        {{ capability.name }} — <span class="light">{{ capability.reason }}</span>
+                    {% else %}
+                        <span class="light">{{ 'No gateway recorded.'|t('subscribr') }}</span>
+                    {% endif %}
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pane">
+        <h2>{{ 'Next shipment'|t('subscribr') }}</h2>
+        {% if items|length %}
+            <table class="data fullwidth">
+                <thead><tr><th>{{ 'Item'|t('subscribr') }}</th><th class="thin">{{ 'Qty'|t('subscribr') }}</th><th class="thin rightalign">{{ 'Price'|t('subscribr') }}</th></tr></thead>
+                <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <td>{{ item.description }} <span class="light">{{ item.sku }}</span>{% if not item.isStanding %} <span class="light">({{ 'this cycle only'|t('subscribr') }})</span>{% endif %}</td>
+                            <td class="thin">{{ item.qty }}</td>
+                            <td class="thin rightalign">{{ item.subtotal|commerceCurrency(subscription.currency) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="light">{{ 'Nothing is set to ship.'|t('subscribr') }}</p>
+        {% endif %}
+    </div>
+
+    {% if pending|length %}
+        <div class="pane">
+            <h2>{{ 'Booked changes'|t('subscribr') }}</h2>
+            <table class="data fullwidth">
+                <tbody>
+                    {% for action in pending %}
+                        <tr>
+                            <td><strong>{{ action.action|title }}</strong>{% if action.cycle %} <span class="light">{{ 'cycle {n}'|t('subscribr', { n: action.cycle }) }}</span>{% endif %}</td>
+                            <td class="thin rightalign">
+                                {% if canManage %}
+                                    <form method="post" accept-charset="UTF-8">
+                                        {{ csrfInput() }}
+                                        {{ actionInput('subscribr/subscriptions/cancel-scheduled') }}
+                                        {{ hiddenInput('scheduleId', action.id) }}
+                                        {{ redirectInput('subscribr/subscriptions/' ~ subscription.id) }}
+                                        <button type="submit" class="btn small">{{ 'Cancel'|t('subscribr') }}</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {% if canManage %}
+        <div class="pane">
+            <h2>{{ 'Actions'|t('subscribr') }}</h2>
+            <div class="flex flex-nowrap" style="gap: 8px; flex-wrap: wrap;">
+                {% set actions = {
+                    'pause': 'Pause'|t('subscribr'),
+                    'resume': 'Resume'|t('subscribr'),
+                    'uncancel': 'Reinstate'|t('subscribr'),
+                } %}
+                {% for handle, label in actions %}
+                    <form method="post" accept-charset="UTF-8">
+                        {{ csrfInput() }}
+                        {{ actionInput('subscribr/subscriptions/' ~ handle) }}
+                        {{ hiddenInput('subscriptionId', subscription.id) }}
+                        {{ redirectInput('subscribr/subscriptions/' ~ subscription.id) }}
+                        <button type="submit" class="btn">{{ label }}</button>
+                    </form>
+                {% endfor %}
+
+                {% if canBill %}
+                    <form method="post" accept-charset="UTF-8">
+                        {{ csrfInput() }}
+                        {{ actionInput('subscribr/subscriptions/renew-now') }}
+                        {{ hiddenInput('subscriptionId', subscription.id) }}
+                        {{ redirectInput('subscribr/subscriptions/' ~ subscription.id) }}
+                        <button type="submit" class="btn submit">{{ 'Renew now'|t('subscribr') }}</button>
+                    </form>
+                {% endif %}
+
+                {% if plan and plan.allowSkip %}
+                    <form method="post" accept-charset="UTF-8">
+                        {{ csrfInput() }}
+                        {{ actionInput('subscribr/subscriptions/schedule') }}
+                        {{ hiddenInput('subscriptionId', subscription.id) }}
+                        {{ hiddenInput('scheduledAction', 'skip') }}
+                        {{ redirectInput('subscribr/subscriptions/' ~ subscription.id) }}
+                        <button type="submit" class="btn">{{ 'Skip the next cycle'|t('subscribr') }}</button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <hr>
+
+            <form method="post" accept-charset="UTF-8">
+                {{ csrfInput() }}
+                {{ actionInput('subscribr/subscriptions/cancel') }}
+                {{ hiddenInput('subscriptionId', subscription.id) }}
+                {{ redirectInput('subscribr/subscriptions/' ~ subscription.id) }}
+                {{ forms.textField({
+                    label: 'Cancel'|t('subscribr'),
+                    instructions: 'The subscription keeps running until the end of the period the subscriber has paid for, unless you tick the box.'|t('subscribr'),
+                    name: 'reason',
+                    placeholder: 'Why?'|t('subscribr'),
+                }) }}
+                {{ forms.lightswitchField({
+                    label: 'End it immediately'|t('subscribr'),
+                    name: 'immediately',
+                }) }}
+                <button type="submit" class="btn">{{ 'Cancel subscription'|t('subscribr') }}</button>
+            </form>
+        </div>
+
+        {% if switchOptions|length %}
+            <div class="pane">
+                <h2>{{ 'Change plan'|t('subscribr') }}</h2>
+                <form method="post" accept-charset="UTF-8">
+                    {{ csrfInput() }}
+                    {{ actionInput('subscribr/subscriptions/switch-plan') }}
+                    {{ hiddenInput('subscriptionId', subscription.id) }}
+                    {{ redirectInput('subscribr/subscriptions/' ~ subscription.id) }}
+                    {{ forms.selectField({
+                        label: 'Move to'|t('subscribr'),
+                        name: 'planId',
+                        options: switchOptions|map(p => { label: p.name ~ ' — ' ~ p.describe, value: p.id }),
+                    }) }}
+                    <button type="submit" class="btn submit">{{ 'Change plan'|t('subscribr') }}</button>
+                </form>
+                <p class="light">
+                    {{ 'Anything owed for the rest of this period is worked out and charged, and the subscriber is shown the same figures in their account.'|t('subscribr') }}
+                </p>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <div class="pane">
+        <h2>{{ 'Orders'|t('subscribr') }}</h2>
+        {% if orders|length %}
+            <table class="data fullwidth">
+                <thead><tr><th>{{ 'Order'|t('subscribr') }}</th><th>{{ 'Date'|t('subscribr') }}</th><th>{{ 'Total'|t('subscribr') }}</th><th>{{ 'Paid'|t('subscribr') }}</th></tr></thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td><a href="{{ order.cpEditUrl }}">{{ order.reference ?? order.shortNumber }}</a></td>
+                            <td class="light">{{ order.dateOrdered ? order.dateOrdered|datetime('short') : 'unpaid'|t('subscribr') }}</td>
+                            <td>{{ order.totalAsCurrency }}</td>
+                            <td>{% if order.isPaid %}✓{% else %}<span class="error">✗</span>{% endif %}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="light">{{ 'No orders yet.'|t('subscribr') }}</p>
+        {% endif %}
+    </div>
+
+    {% if attempts|length %}
+        <div class="pane">
+            <h2>{{ 'Payment attempts'|t('subscribr') }}</h2>
+            <table class="data fullwidth">
+                <thead><tr><th>{{ 'When'|t('subscribr') }}</th><th>{{ 'Outcome'|t('subscribr') }}</th><th>{{ 'Amount'|t('subscribr') }}</th><th>{{ 'Message'|t('subscribr') }}</th></tr></thead>
+                <tbody>
+                    {% for attempt in attempts %}
+                        <tr>
+                            <td class="light nowrap">{{ attempt.dateCreated ? attempt.dateCreated|datetime('short') : '' }}</td>
+                            <td>{% if attempt.isSuccess %}✓{% else %}<span class="error">{{ attempt.outcome }}</span>{% endif %}</td>
+                            <td>{{ attempt.amount is not null ? attempt.amount|commerceCurrency(attempt.currency ?? subscription.currency) : '' }}</td>
+                            <td class="light">{{ attempt.message }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    <div class="pane">
+        <h2>{{ 'History'|t('subscribr') }}</h2>
+        {% include 'subscribr/_includes/_timeline' %}
+    </div>
+
+    {% if canManage %}
+        <div class="pane">
+            <form method="post" accept-charset="UTF-8">
+                {{ csrfInput() }}
+                {{ actionInput('subscribr/subscriptions/save-note') }}
+                {{ hiddenInput('subscriptionId', subscription.id) }}
+                {{ redirectInput('subscribr/subscriptions/' ~ subscription.id) }}
+                {{ forms.textareaField({
+                    label: 'Internal note'|t('subscribr'),
+                    name: 'note',
+                    value: subscription.note,
+                    rows: 3,
+                }) }}
+                <button type="submit" class="btn submit">{{ 'Save note'|t('subscribr') }}</button>
+            </form>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{# Shown on the user's own edit screen, where support looks first. #}
+<fieldset>
+    <legend class="h6">{{ 'Subscriptions'|t('subscribr') }}</legend>
+    <ul>
+        {% for subscription in subscriptions %}
+            <li style="margin-bottom: 8px;">
+                <a href="{{ subscription.cpEditUrl }}">{{ subscription.name }}</a>
+                <span class="status {{ subscription.status == 'active' ? 'green' : (subscription.status == 'pastDue' ? 'orange' : 'grey') }}"></span>
+                <div class="light smalltext">
+                    {{ subscription.renewalPriceAsCurrency }} {{ subscription.cadence.describe }}
+                    {% if subscription.dateNextPayment %}
+                        · {{ 'next {date}'|t('subscribr', { date: subscription.dateNextPayment|date('j M') }) }}
+                    {% endif %}
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</fieldset>

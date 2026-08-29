@@ -1,0 +1,13 @@
+{% import '_includes/forms' as forms %}
+
+{{ forms.textField({
+    label: 'Look ahead'|t('subscribr'),
+    instructions: 'How many days of upcoming renewals to count.'|t('subscribr'),
+    id: 'days',
+    name: 'days',
+    value: widget.days,
+    type: 'number',
+    min: 1,
+    max: 90,
+    size: 3,
+}) }}

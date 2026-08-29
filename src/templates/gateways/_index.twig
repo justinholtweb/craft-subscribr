@@ -1,0 +1,54 @@
+{% extends '_layouts/cp' %}
+{% set crumbs = [{ label: 'Subscribr'|t('subscribr'), url: url('subscribr/subscriptions') }] %}
+
+{% block content %}
+    <div class="pane">
+        <p>
+            {{ 'Subscribr does not need a gateway to support subscriptions. It needs one that can charge a stored payment method with nobody present — which is most of them.'|t('subscribr') }}
+        </p>
+        {% if automatic %}
+            <p class="success">
+                {{ '{n, plural, =1{One gateway can} other{# gateways can}} renew automatically.'|t('subscribr', { n: automatic }) }}
+            </p>
+        {% else %}
+            <p class="error">
+                {{ 'No gateway here can charge a stored payment method. Subscriptions will still work, but every renewal will be invoiced for the subscriber to pay by hand.'|t('subscribr') }}
+            </p>
+        {% endif %}
+    </div>
+
+    <table class="data fullwidth">
+        <thead>
+            <tr>
+                <th>{{ 'Gateway'|t('subscribr') }}</th>
+                <th>{{ 'Renewals'|t('subscribr') }}</th>
+                <th>{{ 'Stored methods'|t('subscribr') }}</th>
+                <th>{{ 'Purchase'|t('subscribr') }}</th>
+                <th>{{ 'Refunds'|t('subscribr') }}</th>
+                <th>{{ 'Notes'|t('subscribr') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for capability in capabilities %}
+                <tr>
+                    <td><strong>{{ capability.name }}</strong> <code class="light">{{ capability.handle }}</code></td>
+                    <td>
+                        <span class="status {{ capability.isAutomatic ? 'green' : (capability.canCarrySubscriptions ? 'orange' : 'red') }}"></span>
+                        {{ capability.mode == 'automatic' ? 'Automatic'|t('subscribr') : (capability.mode == 'manual' ? 'Invoiced'|t('subscribr') : 'Not possible'|t('subscribr')) }}
+                    </td>
+                    <td>{{ capability.supportsPaymentSources ? '✓' : '—' }}</td>
+                    <td>{{ capability.supportsPurchase ? '✓' : (capability.supportsAuthorize ? 'authorise only'|t('subscribr') : '—') }}</td>
+                    <td>{{ capability.supportsRefund ? '✓' : '—' }}</td>
+                    <td class="light">
+                        {{ capability.reason }}
+                        {% if capability.isCommerceSubscriptionGateway %}
+                            <br>{{ 'This gateway also has Commerce’s own subscriptions. Subscribr runs its own engine on it, so the two sets of plans stay separate.'|t('subscribr') }}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" class="light">{{ 'This store has no payment gateways.'|t('subscribr') }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

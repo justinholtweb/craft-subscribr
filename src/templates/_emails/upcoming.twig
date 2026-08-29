@@ -1,0 +1,12 @@
+{% extends 'subscribr/_emails/_layout' %}
+{% block body %}
+    <h1 style="font-size: 20px;">{{ 'Your next order is coming up'|t('subscribr') }}</h1>
+    <p>
+        {{ 'We’ll charge {amount} on {date} for your {plan} subscription.'|t('subscribr', {
+            amount: subscription.renewalPriceAsCurrency,
+            date: subscription.dateNextPayment|date('j F Y'),
+            plan: subscription.plan.name ?? '',
+        }) }}
+    </p>
+    <p>{{ 'If you’d like to skip this one, change what’s in it, or pause for a while, you can do all of that from your account before then.'|t('subscribr') }}</p>
+{% endblock %}

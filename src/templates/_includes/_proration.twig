@@ -1,0 +1,46 @@
+{#
+   The proration preview.
+
+   Shared by the control panel and the portal on purpose: the merchant and the customer are shown
+   the same working, from the same object the charge is taken from.
+#}
+{% set currency = proration.currency %}
+
+<div class="subscribr-proration">
+    <div class="subscribr-proration-bar" title="{{ '{n} of {total} days used'|t('subscribr', { n: proration.daysUsed, total: proration.daysInPeriod }) }}">
+        <span style="width: {{ (proration.usedFraction * 100)|round }}%"></span>
+    </div>
+    <p class="light">
+        {{ '{used} of {total} days of this period used, {left} remaining.'|t('subscribr', {
+            used: proration.daysUsed,
+            total: proration.daysInPeriod,
+            left: proration.daysRemaining,
+        }) }}
+    </p>
+
+    <table class="data fullwidth">
+        <tbody>
+            {% for line in proration.lines %}
+                <tr>
+                    <td>
+                        {{ line.label }}
+                        {% if line.detail %}<div class="light">{{ line.detail }}</div>{% endif %}
+                    </td>
+                    <td class="thin rightalign">
+                        {{ line.amount == 0 ? '' : proration.formatAmount(line.amount) }}
+                    </td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <th>{{ proration.isCredit ? 'Credited today'|t('subscribr') : 'Due today'|t('subscribr') }}</th>
+                <th class="thin rightalign">{{ proration.formatAmount(proration.netDue|abs) }}</th>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if proration.isCredit %}
+        <p class="light">
+            {{ 'Nothing is refunded now — this credit comes off the next payment.'|t('subscribr') }}
+        </p>
+    {% endif %}
+</div>

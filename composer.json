@@ -1,0 +1,55 @@
+{
+    "name": "justinholtweb/craft-subscribr",
+    "description": "Recurring commerce for Craft — subscription boxes, skip/pause/swap, prepaid and gift plans, mixed carts, proration and dunning, on any gateway that can store a payment source.",
+    "version": "5.0.0",
+    "type": "craft-plugin",
+    "keywords": [
+        "craftcms",
+        "craft-plugin",
+        "craft-commerce",
+        "commerce",
+        "subscriptions",
+        "recurring",
+        "subscription-box",
+        "dunning",
+        "billing"
+    ],
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Justin Holt",
+            "homepage": "https://justinholt.com"
+        }
+    ],
+    "support": {
+        "email": "justin@justinholt.com"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "craftcms/cms": "^5.3.0",
+        "craftcms/commerce": "^5.0.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "justinholtweb\\subscribr\\": "src/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "craftcms/plugin-installer": true,
+            "yiisoft/yii2-composer": true
+        }
+    },
+    "extra": {
+        "name": "Subscribr",
+        "handle": "subscribr",
+        "developer": "Justin Holt",
+        "developerUrl": "https://justinholt.com",
+        "documentationUrl": "https://github.com/justinholtweb/craft-subscribr/blob/main/README.md",
+        "changelogUrl": "https://raw.githubusercontent.com/justinholtweb/craft-subscribr/main/CHANGELOG.md",
+        "class": "justinholtweb\\subscribr\\Plugin"
+    }
+}

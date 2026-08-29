@@ -1,0 +1,26 @@
+{# The subscription's history. The same data the subscriber sees in the portal. #}
+{% if history|length %}
+    <table class="data fullwidth">
+        <thead>
+            <tr>
+                <th>{{ 'When'|t('subscribr') }}</th>
+                <th>{{ 'What'|t('subscribr') }}</th>
+                <th>{{ 'Who'|t('subscribr') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in history %}
+                <tr>
+                    <td class="nowrap light">{{ entry.dateCreated ? entry.dateCreated|datetime('short') : '—' }}</td>
+                    <td>
+                        <strong>{{ entry.type|kebab|replace({'-': ' '})|title }}</strong>
+                        {% if entry.message %}<div class="light">{{ entry.message }}</div>{% endif %}
+                    </td>
+                    <td class="light nowrap">{{ entry.actorName }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p class="light">{{ 'Nothing has happened yet.'|t('subscribr') }}</p>
+{% endif %}

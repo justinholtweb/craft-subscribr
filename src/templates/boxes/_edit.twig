@@ -1,0 +1,128 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% set crumbs = [
+    { label: 'Subscribr'|t('subscribr'), url: url('subscribr/subscriptions') },
+    { label: 'Boxes'|t('subscribr'), url: url('subscribr/boxes') },
+] %}
+{% set fullPageForm = true %}
+
+{% block content %}
+    {{ actionInput('subscribr/boxes/save') }}
+    {{ redirectInput('subscribr/boxes') }}
+    {% if box.id %}{{ hiddenInput('boxId', box.id) }}{% endif %}
+
+    {{ forms.textField({
+        first: true,
+        label: 'Name'|t('subscribr'),
+        id: 'name',
+        name: 'name',
+        value: box.name,
+        errors: box.getErrors('name'),
+        required: true,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Handle'|t('subscribr'),
+        id: 'handle',
+        name: 'handle',
+        class: 'code',
+        value: box.handle,
+        errors: box.getErrors('handle'),
+        required: true,
+    }) }}
+
+    {{ forms.selectField({
+        label: 'Who fills it'|t('subscribr'),
+        name: 'mode',
+        value: box.mode,
+        options: modes,
+    }) }}
+
+    {{ forms.selectField({
+        label: 'How it’s priced'|t('subscribr'),
+        name: 'pricing',
+        value: box.pricing,
+        options: pricingModes,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Box price'|t('subscribr'),
+        name: 'boxPrice',
+        value: box.boxPrice,
+        type: 'number',
+        step: 'any',
+        size: 8,
+        errors: box.getErrors('boxPrice'),
+    }) }}
+
+    <div class="flex">
+        {{ forms.textField({ label: 'Fewest items'|t('subscribr'), name: 'minItems', value: box.minItems, type: 'number', min: 0, size: 4 }) }}
+        {{ forms.textField({ label: 'Most items'|t('subscribr'), name: 'maxItems', value: box.maxItems, type: 'number', min: 0, size: 4 }) }}
+    </div>
+
+    {{ forms.lightswitchField({
+        label: 'Let subscribers swap a shipment'|t('subscribr'),
+        name: 'allowSwap',
+        on: box.allowSwap,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Lock contents before shipping'|t('subscribr'),
+        instructions: 'Hours before the renewal. Past this the contents can’t be changed, because the parcel is being packed.'|t('subscribr'),
+        name: 'lockHours',
+        value: box.lockHours,
+        type: 'number',
+        min: 0,
+        size: 5,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Avoid repeats for'|t('subscribr'),
+        instructions: 'Cycles. Only used by a surprise box.'|t('subscribr'),
+        name: 'avoidRepeatCycles',
+        value: box.avoidRepeatCycles,
+        type: 'number',
+        min: 0,
+        size: 5,
+    }) }}
+
+    {{ forms.lightswitchField({ label: 'Enabled'|t('subscribr'), name: 'enabled', on: box.enabled }) }}
+
+    <hr>
+    <h2>{{ 'Slots'|t('subscribr') }}</h2>
+    <p class="light">{{ 'Each slot is a choice the subscriber makes: “pick 2 coffees”, “pick 1 mug”, “add-ons, up to 3”. Leave a slot’s products empty to allow anything.'|t('subscribr') }}</p>
+
+    {% if box.getErrors('slots') %}
+        <ul class="errors">{% for error in box.getErrors('slots') %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    {% for i, slot in box.slots|merge([create('justinholtweb\\subscribr\\models\\BoxSlot')]) %}
+        <div class="pane">
+            {{ hiddenInput('slots[' ~ i ~ '][id]', slot.id) }}
+            {{ forms.textField({
+                label: 'Slot name'|t('subscribr'),
+                name: 'slots[' ~ i ~ '][name]',
+                value: slot.name,
+                placeholder: i == box.slots|length ? 'Add another slot…'|t('subscribr') : null,
+            }) }}
+            <div class="flex">
+                {{ forms.textField({ label: 'Fewest'|t('subscribr'), name: 'slots[' ~ i ~ '][minItems]', value: slot.minItems, type: 'number', min: 0, size: 4 }) }}
+                {{ forms.textField({ label: 'Most'|t('subscribr'), name: 'slots[' ~ i ~ '][maxItems]', value: slot.maxItems, type: 'number', min: 0, size: 4 }) }}
+            </div>
+            {{ forms.elementSelectField({
+                label: 'Products'|t('subscribr'),
+                name: 'slots[' ~ i ~ '][purchasableIds]',
+                elementType: 'craft\\commerce\\elements\\Variant',
+                elements: slot.purchasableIds ? craft.variants.id(slot.purchasableIds).status(null).all() : [],
+                limit: null,
+            }) }}
+            {{ forms.lightswitchField({
+                label: 'Add-on slot'|t('subscribr'),
+                instructions: 'Charged on top of the box price rather than included in it.'|t('subscribr'),
+                name: 'slots[' ~ i ~ '][isAddOn]',
+                on: slot.isAddOn,
+            }) }}
+        </div>
+    {% endfor %}
+{% endblock %}

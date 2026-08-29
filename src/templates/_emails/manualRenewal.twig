@@ -1,0 +1,19 @@
+{% extends 'subscribr/_emails/_layout' %}
+{% block body %}
+    <h1 style="font-size: 20px;">{{ 'Your renewal is ready to pay'|t('subscribr') }}</h1>
+    <p>
+        {{ 'Your {plan} subscription is due. We can’t charge you automatically, so here’s a link to pay it.'|t('subscribr', {
+            plan: subscription.plan.name ?? '',
+        }) }}
+    </p>
+    {% if order %}
+        <p><strong>{{ order.totalAsCurrency }}</strong></p>
+    {% endif %}
+    {% if payUrl %}
+        <p>
+            <a href="{{ payUrl }}" style="background: #1c1c1c; color: #fff; padding: 10px 18px; border-radius: 4px; text-decoration: none; display: inline-block;">
+                {{ 'Pay now'|t('subscribr') }}
+            </a>
+        </p>
+    {% endif %}
+{% endblock %}
