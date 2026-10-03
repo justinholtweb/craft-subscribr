@@ -25,7 +25,6 @@ use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
 use craft\commerce\models\payments\DummyPaymentForm;
 use craft\commerce\Plugin as Commerce;
-use craft\db\Query;
 use craft\elements\User;
 use craft\helpers\StringHelper;
 use justinholtweb\subscribr\db\Table;
@@ -133,7 +132,7 @@ try {
     // ------------------------------------------------------------------------
     section('Cadence — the one place a date advances');
 
-    check('monthly cadence advances a month', function (): bool|string {
+    check('monthly cadence advances a month', function(): bool|string {
         $cadence = new Cadence(['interval' => Cadence::MONTH, 'intervalCount' => 1]);
         $next = $cadence->next(new DateTime('2026-03-15 09:00:00'));
 
@@ -141,14 +140,14 @@ try {
             ?: 'got ' . $next->format('Y-m-d H:i');
     });
 
-    check('31 January + 1 month clamps to 28 February, not 3 March', function (): bool|string {
+    check('31 January + 1 month clamps to 28 February, not 3 March', function(): bool|string {
         $cadence = new Cadence(['interval' => Cadence::MONTH, 'intervalCount' => 1]);
         $next = $cadence->next(new DateTime('2026-01-31 09:00:00'));
 
         return $next->format('Y-m-d') === '2026-02-28' ?: 'got ' . $next->format('Y-m-d');
     });
 
-    check('a clamped month does not drag the billing day forward for ever', function (): bool|string {
+    check('a clamped month does not drag the billing day forward for ever', function(): bool|string {
         // The bug this guards: 31 Jan -> 3 Mar -> 3 Apr, and the subscriber's billing day has
         // permanently moved. Clamping means the next hop from 28 Feb is 28 Mar, but a subscription
         // billed on the 31st should come back to the 31st.
@@ -160,7 +159,7 @@ try {
             ?: 'got ' . $first->format('Y-m-d') . ' then ' . $second->format('Y-m-d');
     });
 
-    check('the time of day survives a spring DST change', function (): bool|string {
+    check('the time of day survives a spring DST change', function(): bool|string {
         $tz = new DateTimeZone('Europe/London');
         $cadence = new Cadence(['interval' => Cadence::MONTH, 'intervalCount' => 1]);
         $next = $cadence->next(new DateTime('2026-03-15 09:00:00', $tz));
@@ -168,7 +167,7 @@ try {
         return $next->format('H:i') === '09:00' ?: 'got ' . $next->format('Y-m-d H:i T');
     });
 
-    check('a weekly anchor moves forwards, never backwards', function (): bool|string {
+    check('a weekly anchor moves forwards, never backwards', function(): bool|string {
         // Wednesday 2026-03-11, anchored to Monday (1). The next payment must be the following
         // Monday, not the Monday just gone — which would bill for a period not yet had.
         $cadence = new Cadence(['interval' => Cadence::WEEK, 'intervalCount' => 1, 'anchorDay' => 1]);
@@ -178,14 +177,14 @@ try {
             ?: 'got ' . $next->format('Y-m-d D');
     });
 
-    check('every-2-weeks is 14 days', function (): bool|string {
+    check('every-2-weeks is 14 days', function(): bool|string {
         $cadence = new Cadence(['interval' => Cadence::WEEK, 'intervalCount' => 2]);
 
         return $cadence->daysInCycle(new DateTime('2026-05-01')) === 14
             ?: 'got ' . $cadence->daysInCycle(new DateTime('2026-05-01'));
     });
 
-    check('daysInCycle is measured against a real month, not an average', function (): bool|string {
+    check('daysInCycle is measured against a real month, not an average', function(): bool|string {
         $cadence = new Cadence(['interval' => Cadence::MONTH, 'intervalCount' => 1]);
         $feb = $cadence->daysInCycle(new DateTime('2026-02-01'));
         $mar = $cadence->daysInCycle(new DateTime('2026-03-01'));
@@ -193,7 +192,7 @@ try {
         return $feb === 28 && $mar === 31 ?: "Feb $feb, Mar $mar";
     });
 
-    check('a cadence describes itself in words', function () use (&$x): bool|string {
+    check('a cadence describes itself in words', function() use (&$x): bool|string {
         $weekly = new Cadence(['interval' => Cadence::WEEK, 'intervalCount' => 1]);
         $fortnightly = new Cadence(['interval' => Cadence::WEEK, 'intervalCount' => 2]);
         $anchored = new Cadence(['interval' => Cadence::MONTH, 'intervalCount' => 1, 'anchorDay' => 1]);
@@ -209,14 +208,14 @@ try {
 
     $dummy = $commerce->getGateways()->getGatewayByHandle('dummy');
 
-    check('a gateway with stored payment methods renews automatically', function () use ($billing, $dummy): bool|string {
+    check('a gateway with stored payment methods renews automatically', function() use ($billing, $dummy): bool|string {
         $capability = $billing->getCapability($dummy);
 
         return $capability->getIsAutomatic() && $capability->mode === GatewayCapability::AUTOMATIC
             ?: 'mode ' . $capability->mode;
     });
 
-    check('a gateway without them is invoiced, not refused', function () use ($billing, $commerce): bool|string {
+    check('a gateway without them is invoiced, not refused', function() use ($billing, $commerce): bool|string {
         foreach ($commerce->getGateways()->getAllGateways() as $gateway) {
             if ($gateway->supportsPaymentSources()) {
                 continue;
@@ -232,7 +231,7 @@ try {
         return 'no gateway without payment sources to test against';
     });
 
-    check('being a Commerce subscription gateway is recorded but changes nothing', function () use ($billing, $dummy): bool|string {
+    check('being a Commerce subscription gateway is recorded but changes nothing', function() use ($billing, $dummy): bool|string {
         $capability = $billing->getCapability($dummy);
 
         // Dummy implements SubscriptionGatewayInterface. Subscribr must not treat it specially:
@@ -241,7 +240,7 @@ try {
             ?: 'flagged ' . var_export($capability->isCommerceSubscriptionGateway, true);
     });
 
-    check('the store reports whether anything can carry a subscription', function () use ($billing): bool {
+    check('the store reports whether anything can carry a subscription', function() use ($billing): bool {
         return $billing->getHasCapableGateway() === true;
     });
 
@@ -288,7 +287,7 @@ try {
     $decaf = makeProduct($tag . ' Decaf', 14.00, $productType, $storeId, $createdProducts);
     $mug = makeProduct($tag . ' Mug', 9.00, $productType, $storeId, $createdProducts);
 
-    check('the test products exist and are purchasable', function () use ($coffee, $decaf, $mug): bool|string {
+    check('the test products exist and are purchasable', function() use ($coffee, $decaf, $mug): bool|string {
         return $coffee && $decaf && $mug && $coffee->getPrice() == 12.00
             ?: 'coffee price ' . ($coffee?->getPrice() ?? 'null');
     });
@@ -300,7 +299,7 @@ try {
         'Test card',
     );
 
-    check('a stored payment method can be created for the subscriber', function () use ($source): bool|string {
+    check('a stored payment method can be created for the subscriber', function() use ($source): bool|string {
         return $source && $source->id ? true : 'no payment source';
     });
 
@@ -322,7 +321,7 @@ try {
         'storeId' => $storeId,
     ]);
 
-    check('a plan saves', function () use ($plans, $monthly, &$createdPlans): bool|string {
+    check('a plan saves', function() use ($plans, $monthly, &$createdPlans): bool|string {
         $ok = $plans->savePlan($monthly);
         $createdPlans[] = $monthly;
 
@@ -357,35 +356,35 @@ try {
     $plans->savePlan($cheaper);
     $createdPlans[] = $cheaper;
 
-    check('a plan that overrides the price must have one', function (): bool|string {
+    check('a plan that overrides the price must have one', function(): bool|string {
         $plan = new Plan(['name' => 'x', 'handle' => 'xyz', 'pricingMode' => Plan::PRICING_OVERRIDE]);
 
         return !$plan->validate() && $plan->hasErrors('planPrice')
             ?: 'validated with no price';
     });
 
-    check('a monthly plan cannot be anchored to the 31st', function (): bool|string {
+    check('a monthly plan cannot be anchored to the 31st', function(): bool|string {
         $plan = new Plan(['name' => 'x', 'handle' => 'xyz', 'interval' => Cadence::MONTH, 'anchorDay' => 31]);
         $plan->validate();
 
         return $plan->hasErrors('anchorDay') ?: 'the 31st was accepted';
     });
 
-    check('a monthly plan may be anchored to the 28th', function (): bool|string {
+    check('a monthly plan may be anchored to the 28th', function(): bool|string {
         $plan = new Plan(['name' => 'x', 'handle' => 'xyz', 'interval' => Cadence::MONTH, 'anchorDay' => 28, 'planPrice' => 1]);
         $plan->validate();
 
         return !$plan->hasErrors('anchorDay') ?: json_encode($plan->getErrors('anchorDay'));
     });
 
-    check('a daily plan cannot be anchored at all', function (): bool|string {
+    check('a daily plan cannot be anchored at all', function(): bool|string {
         $plan = new Plan(['name' => 'x', 'handle' => 'xyz', 'interval' => Cadence::DAY, 'anchorDay' => 3]);
         $plan->validate();
 
         return $plan->hasErrors('anchorDay') ?: 'an anchored daily plan validated';
     });
 
-    check('prepaid options are cleaned, sorted and de-duplicated', function () use ($monthly): bool|string {
+    check('prepaid options are cleaned, sorted and de-duplicated', function() use ($monthly): bool|string {
         $plan = new Plan(['prepaidOptions' => '12, 3, 1, 6, 3']);
 
         // 1 is dropped: one cycle is a subscription, not a prepayment.
@@ -393,27 +392,27 @@ try {
             ?: json_encode($plan->getPrepaidCycleOptions());
     });
 
-    check('the prepaid multiplier applies the discount', function () use ($monthly): bool|string {
+    check('the prepaid multiplier applies the discount', function() use ($monthly): bool|string {
         // 6 cycles at 10% off = 5.4 cycles' worth.
         return abs($monthly->prepaidMultiplier(6) - 5.4) < 0.0001
             ?: (string)$monthly->prepaidMultiplier(6);
     });
 
-    check('one cycle is never a prepayment', function () use ($monthly): bool|string {
+    check('one cycle is never a prepayment', function() use ($monthly): bool|string {
         return $monthly->prepaidMultiplier(1) === 1.0 ?: (string)$monthly->prepaidMultiplier(1);
     });
 
-    check('a plan will not switch outside its group', function () use ($monthly, $storeId): bool|string {
+    check('a plan will not switch outside its group', function() use ($monthly, $storeId): bool|string {
         $other = new Plan(['name' => 'x', 'handle' => 'z', 'switchGroup' => 'somethingelse', 'enabled' => true]);
 
         return !$monthly->canSwitchTo($other) ?: 'switched across groups';
     });
 
-    check('a plan will switch within its group', function () use ($monthly, $bigger): bool {
+    check('a plan will switch within its group', function() use ($monthly, $bigger): bool {
         return $monthly->canSwitchTo($bigger);
     });
 
-    check('a plan with subscribers refuses to be deleted', function () use ($plans, $subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
+    check('a plan with subscribers refuses to be deleted', function() use ($plans, $subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
         $item = new Item(['purchasableId' => $coffee->id, 'qty' => 1, 'price' => 12.00, 'description' => 'Coffee']);
         $temp = $subscriptions->createSubscription($monthly, (int)$user->id, [$item]);
         $createdSubscriptions[] = $temp;
@@ -443,23 +442,23 @@ try {
     ]);
     $createdSubscriptions[] = $subscription;
 
-    check('a new subscription is pending, not running', function () use ($subscription): bool|string {
+    check('a new subscription is pending, not running', function() use ($subscription): bool|string {
         return $subscription->getStatus() === Subscription::STATUS_PENDING
             ?: 'status ' . $subscription->getStatus();
     });
 
-    check('creating one writes to the ledger', function () use ($ledger, $subscription): bool|string {
+    check('creating one writes to the ledger', function() use ($ledger, $subscription): bool|string {
         $entries = $ledger->getEntriesOfType((int)$subscription->id, LogEntry::TYPE_CREATED);
 
         return count($entries) === 1 ?: count($entries) . ' created entries';
     });
 
-    check('the renewal subtotal is the items, times the quantity', function () use ($subscription): bool|string {
+    check('the renewal subtotal is the items, times the quantity', function() use ($subscription): bool|string {
         return abs($subscription->getRenewalSubtotal() - 24.00) < 0.001
             ?: (string)$subscription->getRenewalSubtotal();
     });
 
-    check('activating it sets the clock running', function () use ($subscriptions, $subscription, $anchorStart, $firstDue): bool|string {
+    check('activating it sets the clock running', function() use ($subscriptions, $subscription, $anchorStart, $firstDue): bool|string {
         $subscriptions->activate($subscription, clone $anchorStart);
 
         return $subscription->getStatus() === Subscription::STATUS_ACTIVE
@@ -467,11 +466,11 @@ try {
             ?: $subscription->getStatus() . ' / ' . ($subscription->dateNextPayment?->format('Y-m-d') ?? 'null');
     });
 
-    check('it is due, because that date is in the past', function () use ($subscription): bool {
+    check('it is due, because that date is in the past', function() use ($subscription): bool {
         return $subscription->getIsDue() === true;
     });
 
-    check('a renewal takes the money and raises a real Commerce order', function () use ($renewals, $subscription, &$createdOrders): bool|string {
+    check('a renewal takes the money and raises a real Commerce order', function() use ($renewals, $subscription, &$createdOrders): bool|string {
         $result = $renewals->renew($subscription);
 
         if ($result->order) {
@@ -484,7 +483,7 @@ try {
             ?: $result->outcome . ' — ' . ($result->message ?? '');
     });
 
-    check('the cycle advanced and the next date came from the date that was due', function () use ($subscription, $secondDue): bool|string {
+    check('the cycle advanced and the next date came from the date that was due', function() use ($subscription, $secondDue): bool|string {
         // The renewal was due yesterday. The next payment must be one cadence from *that*, not one
         // cadence from now — otherwise a sweep that runs late walks the subscriber's billing date
         // forward a little every month until it has gone round the clock.
@@ -493,7 +492,7 @@ try {
             ?: 'cycle ' . $subscription->cycleCount . ' next ' . ($subscription->dateNextPayment?->format('Y-m-d') ?? 'null');
     });
 
-    check('the order carries the subscription on its line items', function () use ($createdOrders, $subscription): bool|string {
+    check('the order carries the subscription on its line items', function() use ($createdOrders, $subscription): bool|string {
         $order = end($createdOrders);
         $lineItem = $order->getLineItems()[0] ?? null;
 
@@ -501,27 +500,27 @@ try {
             ?: json_encode($lineItem?->getOptions());
     });
 
-    check('the order is linked back to the subscription', function () use ($subscriptions, $subscription): bool|string {
+    check('the order is linked back to the subscription', function() use ($subscriptions, $subscription): bool|string {
         $orders = $subscriptions->getOrders((int)$subscription->id);
 
         return count($orders) === 1 ?: count($orders) . ' linked orders';
     });
 
-    check('the renewal is in the ledger with the amount in it', function () use ($ledger, $subscription): bool|string {
+    check('the renewal is in the ledger with the amount in it', function() use ($ledger, $subscription): bool|string {
         $entries = $ledger->getEntriesOfType((int)$subscription->id, LogEntry::TYPE_RENEWED);
 
         return count($entries) === 1 && str_contains((string)$entries[0]->message, 'renewed')
             ?: json_encode(array_map(static fn($e) => $e->message, $entries));
     });
 
-    check('an automatic renewal is credited to nobody, not to the subscriber', function () use ($ledger, $subscription): bool|string {
+    check('an automatic renewal is credited to nobody, not to the subscriber', function() use ($ledger, $subscription): bool|string {
         $entry = $ledger->getEntriesOfType((int)$subscription->id, LogEntry::TYPE_RENEWED)[0];
 
         return $entry->userId === null && $entry->getActorName() === 'Subscribr'
             ?: 'actor ' . $entry->getActorName();
     });
 
-    check('renewing again when it is not due does nothing', function () use ($renewals, $subscription): bool|string {
+    check('renewing again when it is not due does nothing', function() use ($renewals, $subscription): bool|string {
         $before = $subscription->cycleCount;
         $result = $renewals->renew($subscription);
 
@@ -529,7 +528,7 @@ try {
             ?: $result->outcome;
     });
 
-    check('a payment attempt is recorded even when it succeeds', function () use ($billing, $subscription): bool|string {
+    check('a payment attempt is recorded even when it succeeds', function() use ($billing, $subscription): bool|string {
         $attempts = $billing->getAttempts((int)$subscription->id);
 
         return count($attempts) >= 1 && $attempts[0]->getIsSuccess()
@@ -539,7 +538,7 @@ try {
     // ------------------------------------------------------------------------
     section('Skip, pause and resume');
 
-    check('a booked skip replaces the next renewal instead of billing it', function () use ($schedules, $renewals, $subscription): bool|string {
+    check('a booked skip replaces the next renewal instead of billing it', function() use ($schedules, $renewals, $subscription): bool|string {
         $schedules->book($subscription, ScheduledAction::SKIP, $subscription->cycleCount + 1);
         $before = $subscription->cycleCount;
 
@@ -549,12 +548,12 @@ try {
             ?: $result->outcome . ' cycle ' . $subscription->cycleCount;
     });
 
-    check('a skip moves the schedule on', function () use ($subscription, $thirdDue): bool|string {
+    check('a skip moves the schedule on', function() use ($subscription, $thirdDue): bool|string {
         return $subscription->dateNextPayment?->format('Y-m-d') === $thirdDue->format('Y-m-d')
             ?: ($subscription->dateNextPayment?->format('Y-m-d') ?? 'null');
     });
 
-    check('booking a second skip for the same cycle replaces the first', function () use ($schedules, $subscription): bool|string {
+    check('booking a second skip for the same cycle replaces the first', function() use ($schedules, $subscription): bool|string {
         $schedules->book($subscription, ScheduledAction::SKIP, 99);
         $schedules->book($subscription, ScheduledAction::SKIP, 99);
         $pending = array_filter($schedules->getPending((int)$subscription->id), static fn($a): bool => $a->action === ScheduledAction::SKIP);
@@ -565,18 +564,51 @@ try {
         return $ok ?: count($pending) . ' pending skips';
     });
 
-    check('pausing stops the clock', function () use ($subscriptions, $subscription): bool|string {
+    check('a requested restart date is clamped to the plan’s pause cap', function() use ($subscriptions, $subscription, $monthlyCadence): bool|string {
+        // Posting a date is a request, not an override: a customer must not be able to pause
+        // indefinitely past the merchant's cap by filling in 2099.
+        $plan = $subscription->getPlan();
+        $original = $plan->maxPauseCycles;
+        $plan->maxPauseCycles = 2;
+
+        try {
+            $now = new DateTime();
+            $cap = $monthlyCadence->next($monthlyCadence->next($now));
+            [$far] = $subscriptions->resolvePauseUntil($subscription, '2099-01-01', $now);
+            [$none] = $subscriptions->resolvePauseUntil($subscription, null, $now);
+            $soon = (clone $now)->modify('+10 days');
+            [$near] = $subscriptions->resolvePauseUntil($subscription, $soon->format('Y-m-d'), $now);
+        } finally {
+            $plan->maxPauseCycles = $original;
+        }
+
+        return $far?->format('Y-m-d') === $cap->format('Y-m-d')
+            && $none?->format('Y-m-d') === $cap->format('Y-m-d')
+            && $near?->format('Y-m-d') === $soon->format('Y-m-d')
+            ?: 'far ' . ($far?->format('Y-m-d') ?? 'null') . ' none ' . ($none?->format('Y-m-d') ?? 'null') . ' near ' . ($near?->format('Y-m-d') ?? 'null');
+    });
+
+    check('a restart date in the past, or that is not a date, is refused', function() use ($subscriptions, $subscription): bool|string {
+        [, $past] = $subscriptions->resolvePauseUntil($subscription, '2001-01-01');
+        [, $junk] = $subscriptions->resolvePauseUntil($subscription, 'next tuesday-ish');
+        [, $array] = $subscriptions->resolvePauseUntil($subscription, ['2099-01-01']);
+
+        return $past !== null && $junk !== null && $array !== null
+            ?: 'past ' . var_export($past, true) . ' junk ' . var_export($junk, true) . ' array ' . var_export($array, true);
+    });
+
+    check('pausing stops the clock', function() use ($subscriptions, $subscription): bool|string {
         $subscriptions->pause($subscription);
 
         return $subscription->getStatus() === Subscription::STATUS_PAUSED
             ?: $subscription->getStatus();
     });
 
-    check('a paused subscription is not due, however long it is paused', function () use ($subscription): bool {
+    check('a paused subscription is not due, however long it is paused', function() use ($subscription): bool {
         return $subscription->getIsDue() === false;
     });
 
-    check('resuming gives a full cycle, it does not catch up', function () use ($subscriptions, $subscription): bool|string {
+    check('resuming gives a full cycle, it does not catch up', function() use ($subscriptions, $subscription): bool|string {
         // The behaviour that makes pausing better than cancelling: three months paused must not
         // become three months of billing on the way back.
         $subscriptions->resume($subscription);
@@ -590,7 +622,7 @@ try {
     // ------------------------------------------------------------------------
     section('Cancelling');
 
-    check('cancelling keeps the period the subscriber has paid for', function () use ($subscriptions, $subscription): bool|string {
+    check('cancelling keeps the period the subscriber has paid for', function() use ($subscriptions, $subscription): bool|string {
         $subscriptions->cancel($subscription, 'testing');
 
         return $subscription->getStatus() === Subscription::STATUS_CANCELED
@@ -599,18 +631,18 @@ try {
             ?: $subscription->getStatus() . ' ends ' . ($subscription->dateEnds?->format('Y-m-d') ?? 'null');
     });
 
-    check('a cancelled subscription is still live — it still delivers', function () use ($subscription): bool {
+    check('a cancelled subscription is still live — it still delivers', function() use ($subscription): bool {
         return $subscription->getIsLive() === true;
     });
 
-    check('a cancellation can be reversed while it is still running', function () use ($subscriptions, $subscription): bool|string {
+    check('a cancellation can be reversed while it is still running', function() use ($subscriptions, $subscription): bool|string {
         return $subscriptions->uncancel($subscription)
             && $subscription->getStatus() === Subscription::STATUS_ACTIVE
             && $subscription->dateNextPayment !== null
             ?: $subscription->getStatus();
     });
 
-    check('cancelling immediately ends it now', function () use ($subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
+    check('cancelling immediately ends it now', function() use ($subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
         $temp = $subscriptions->createSubscription($monthly, (int)$user->id, [
             new Item(['purchasableId' => $coffee->id, 'qty' => 1, 'price' => 12.00]),
         ]);
@@ -621,13 +653,13 @@ try {
         return $temp->getStatus() === Subscription::STATUS_EXPIRED ?: $temp->getStatus();
     });
 
-    check('an ended subscription cannot be reinstated', function () use ($subscriptions, $createdSubscriptions): bool|string {
+    check('an ended subscription cannot be reinstated', function() use ($subscriptions, $createdSubscriptions): bool|string {
         $temp = end($createdSubscriptions);
 
         return $subscriptions->uncancel($temp) === false ?: 'an expired subscription was reinstated';
     });
 
-    check('the paid-through date counts prepaid cycles', function () use ($subscriptions, $monthly, $user, $coffee, $anchorStart, $monthlyCadence, &$createdSubscriptions): bool|string {
+    check('the paid-through date counts prepaid cycles', function() use ($subscriptions, $monthly, $user, $coffee, $anchorStart, $monthlyCadence, &$createdSubscriptions): bool|string {
         $temp = $subscriptions->createSubscription($monthly, (int)$user->id, [
             new Item(['purchasableId' => $coffee->id, 'qty' => 1, 'price' => 12.00]),
         ], ['prepaidCyclesRemaining' => 3]);
@@ -646,7 +678,7 @@ try {
     // ------------------------------------------------------------------------
     section('Trials');
 
-    check('a trial defers the first payment and does not charge', function () use ($plans, $subscriptions, $user, $coffee, $storeId, $suffix, $tag, &$createdPlans, &$createdSubscriptions): bool|string {
+    check('a trial defers the first payment and does not charge', function() use ($plans, $subscriptions, $user, $coffee, $storeId, $suffix, $tag, &$createdPlans, &$createdSubscriptions): bool|string {
         $trial = new Plan([
             'name' => $tag . ' Trial',
             'handle' => 'sbr' . $suffix . 'Trial',
@@ -669,7 +701,7 @@ try {
             ?: $temp->subscriptionStatus . ' / ' . ($temp->dateNextPayment?->format('Y-m-d') ?? 'null');
     });
 
-    check('a trial that has run out reads as active without the sweep touching it', function () use ($createdSubscriptions): bool|string {
+    check('a trial that has run out reads as active without the sweep touching it', function() use ($createdSubscriptions): bool|string {
         $temp = end($createdSubscriptions);
 
         // Computed at read time, so a site whose cron is broken still reports honestly.
@@ -681,7 +713,7 @@ try {
     // ------------------------------------------------------------------------
     section('Prepaid cycles');
 
-    check('a prepaid cycle ships without taking any money', function () use ($subscriptions, $renewals, $monthly, $user, $coffee, $anchorStart, &$createdSubscriptions, &$createdOrders): bool|string {
+    check('a prepaid cycle ships without taking any money', function() use ($subscriptions, $renewals, $monthly, $user, $coffee, $anchorStart, &$createdSubscriptions, &$createdOrders): bool|string {
         $temp = $subscriptions->createSubscription($monthly, (int)$user->id, [
             new Item(['purchasableId' => $coffee->id, 'qty' => 1, 'price' => 12.00, 'description' => 'Coffee']),
         ], ['prepaidCyclesRemaining' => 2]);
@@ -701,14 +733,14 @@ try {
             ?: $result->outcome . ' amount ' . var_export($result->amount, true) . ' left ' . $temp->prepaidCyclesRemaining;
     });
 
-    check('the prepaid order is zeroed, not left at the catalogue price', function () use ($createdOrders): bool|string {
+    check('the prepaid order is zeroed, not left at the catalogue price', function() use ($createdOrders): bool|string {
         $order = end($createdOrders);
 
         // A £12 order with no payment against it would appear in every revenue report the store has.
         return (float)$order->getTotalPrice() === 0.0 ?: (string)$order->getTotalPrice();
     });
 
-    check('drawing down a prepaid cycle is in the ledger', function () use ($ledger, $createdSubscriptions): bool|string {
+    check('drawing down a prepaid cycle is in the ledger', function() use ($ledger, $createdSubscriptions): bool|string {
         $temp = null;
 
         foreach ($createdSubscriptions as $candidate) {
@@ -738,7 +770,7 @@ try {
         ['offsetHours' => 168, 'action' => DunningStage::ACTION_CANCEL],
     ]);
 
-    check('stages are sorted on the way in', function () use ($dunning, $profile, &$createdProfiles): bool|string {
+    check('stages are sorted on the way in', function() use ($dunning, $profile, &$createdProfiles): bool|string {
         $dunning->saveProfile($profile);
         $createdProfiles[] = $profile;
         $offsets = array_map(static fn(DunningStage $s): int => $s->offsetHours, $profile->getStages());
@@ -748,11 +780,11 @@ try {
         return $offsets === [24, 72, 168] ?: json_encode($offsets);
     });
 
-    check('the whole sequence reports its own length', function () use ($profile): bool|string {
+    check('the whole sequence reports its own length', function() use ($profile): bool|string {
         return $profile->getTotalHours() === 168 ?: (string)$profile->getTotalHours();
     });
 
-    check('a store with no profiles still has a working sequence', function () use ($dunning): bool|string {
+    check('a store with no profiles still has a working sequence', function() use ($dunning): bool|string {
         $fallback = $dunning->getFallbackProfile();
         $last = $fallback->getStages()[$fallback->getStageCount() - 1];
 
@@ -770,7 +802,7 @@ try {
     $monthly->dunningId = $profile->id;
     $plans->savePlan($monthly);
 
-    check('a failure moves the subscription past due and books a retry', function () use ($dunning, $failing, $subscriptions): bool|string {
+    check('a failure moves the subscription past due and books a retry', function() use ($dunning, $failing, $subscriptions): bool|string {
         $attempt = new Attempt([
             'subscriptionId' => (int)$failing->id,
             'outcome' => Attempt::FAILED,
@@ -785,13 +817,13 @@ try {
             ?: $failing->subscriptionStatus . ' retries at ' . ($failing->dateNextRetry?->format('c') ?? 'null');
     });
 
-    check('the first retry is booked at the first stage’s offset', function () use ($failing): bool|string {
+    check('the first retry is booked at the first stage’s offset', function() use ($failing): bool|string {
         $hours = ($failing->dateNextRetry->getTimestamp() - time()) / 3600;
 
         return $hours > 23 && $hours < 25 ?: round($hours, 1) . ' hours away';
     });
 
-    check('a hopeless decline skips straight to the end of the sequence', function () use ($dunning, $subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
+    check('a hopeless decline skips straight to the end of the sequence', function() use ($dunning, $subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
         $temp = $subscriptions->createSubscription($monthly, (int)$user->id, [
             new Item(['purchasableId' => $coffee->id, 'qty' => 1, 'price' => 12.00]),
         ]);
@@ -809,7 +841,7 @@ try {
         return $temp->dunningStage === 2 ?: 'stage ' . $temp->dunningStage;
     });
 
-    check('a soft decline is retryable, a hard one is not', function (): bool|string {
+    check('a soft decline is retryable, a hard one is not', function(): bool|string {
         $soft = new Attempt(['message' => 'Insufficient funds']);
         $hard = new Attempt(['gatewayCode' => 'lost_card', 'message' => 'Card was reported lost']);
         $unknown = new Attempt(['message' => 'Something went wrong at the acquirer']);
@@ -820,7 +852,7 @@ try {
             ?: 'soft ' . var_export($soft->getIsRetryable(), true) . ' hard ' . var_export($hard->getIsRetryable(), true);
     });
 
-    check('a retry that works recovers the cycle and clears the dunning state', function () use ($dunning, $renewals, $failing): bool|string {
+    check('a retry that works recovers the cycle and clears the dunning state', function() use ($dunning, $renewals, $failing): bool|string {
         $before = $failing->cycleCount;
         $result = $dunning->retry($failing);
 
@@ -832,12 +864,12 @@ try {
             ?: $result->outcome . ' failures ' . $failing->failureCount . ' status ' . $failing->subscriptionStatus;
     });
 
-    check('a recovery is recorded, so the recovery rate can be computed', function () use ($ledger, $failing): bool|string {
+    check('a recovery is recorded, so the recovery rate can be computed', function() use ($ledger, $failing): bool|string {
         return count($ledger->getEntriesOfType((int)$failing->id, LogEntry::TYPE_PAYMENT_RECOVERED)) === 1
             ?: 'no recovery entry';
     });
 
-    check('the dunning summary reports money, not just a count', function () use ($dunning): bool|string {
+    check('the dunning summary reports money, not just a count', function() use ($dunning): bool|string {
         $summary = $dunning->getSummary();
 
         return array_key_exists('atRisk', $summary)
@@ -846,7 +878,7 @@ try {
             ?: json_encode(array_keys($summary));
     });
 
-    check('fixing the card brings the retry forward to now', function () use ($subscriptions, $dunning, $monthly, $user, $coffee, $source, $dummy, &$createdSubscriptions): bool|string {
+    check('fixing the card brings the retry forward to now', function() use ($subscriptions, $dunning, $monthly, $user, $coffee, $source, $dummy, &$createdSubscriptions): bool|string {
         $temp = $subscriptions->createSubscription($monthly, (int)$user->id, [
             new Item(['purchasableId' => $coffee->id, 'qty' => 1, 'price' => 12.00]),
         ]);
@@ -865,7 +897,7 @@ try {
     section('Proration');
 
     $switcher = $subscriptions->createSubscription($monthly, (int)$user->id, [
-        (function () use ($coffee) {
+        (function() use ($coffee) {
             $item = new Item(['purchasableId' => $coffee->id, 'qty' => 1, 'price' => 30.00, 'description' => 'Coffee']);
             $item->setSnapshot(['listPrice' => 30.00]);
 
@@ -880,7 +912,7 @@ try {
     $switcher->dateNextPayment = (new DateTime())->modify('+15 days');
     $subscriptions->save($switcher);
 
-    check('an upgrade credits the unused time and charges the difference', function () use ($proration, $switcher, $bigger): bool|string {
+    check('an upgrade credits the unused time and charges the difference', function() use ($proration, $switcher, $bigger): bool|string {
         $preview = $proration->preview($switcher, $bigger);
 
         // Halfway through a 30-day period: 30/month becomes 45/month, so about half of each is in
@@ -893,7 +925,7 @@ try {
             ?: 'credit ' . $preview->credit . ' charge ' . $preview->charge . ' net ' . $preview->getNetDue() . ' days ' . $preview->daysRemaining;
     });
 
-    check('the preview shows its working', function () use ($proration, $switcher, $bigger): bool|string {
+    check('the preview shows its working', function() use ($proration, $switcher, $bigger): bool|string {
         $preview = $proration->preview($switcher, $bigger);
 
         // A proration UI that only produced a total would be a worse version of not showing one.
@@ -902,7 +934,7 @@ try {
             ?: count($preview->lines) . ' lines, used ' . $preview->getUsedFraction();
     });
 
-    check('a downgrade produces a credit that is carried, not refunded', function () use ($proration, $switcher, $cheaper): bool|string {
+    check('a downgrade produces a credit that is carried, not refunded', function() use ($proration, $switcher, $cheaper): bool|string {
         $preview = $proration->preview($switcher, $cheaper);
 
         // An automatic refund to a card is a real movement of money a merchant should authorise,
@@ -913,7 +945,7 @@ try {
             ?: 'net ' . $preview->getNetDue() . ' carried ' . $preview->carriedCredit;
     });
 
-    check('a switch during a trial is free and says so', function () use ($proration, $subscriptions, $plans, $monthly, $bigger, $user, $coffee, &$createdSubscriptions): bool|string {
+    check('a switch during a trial is free and says so', function() use ($proration, $subscriptions, $plans, $monthly, $bigger, $user, $coffee, &$createdSubscriptions): bool|string {
         $temp = $subscriptions->createSubscription($monthly, (int)$user->id, [
             new Item(['purchasableId' => $coffee->id, 'qty' => 1, 'price' => 12.00]),
         ]);
@@ -932,7 +964,7 @@ try {
             ?: 'net ' . $preview->getNetDue();
     });
 
-    check('a deferred switch is booked, not charged', function () use ($proration, $plans, $subscriptions, $user, $coffee, $storeId, $suffix, $tag, $schedules, &$createdPlans, &$createdSubscriptions): bool|string {
+    check('a deferred switch is booked, not charged', function() use ($proration, $plans, $subscriptions, $user, $coffee, $storeId, $suffix, $tag, $schedules, &$createdPlans, &$createdSubscriptions): bool|string {
         $deferred = new Plan([
             'name' => $tag . ' Deferred',
             'handle' => 'sbr' . $suffix . 'Deferred',
@@ -972,14 +1004,14 @@ try {
             ?: 'ok ' . var_export($ok, true) . ' mode ' . $preview->mode . ' booked ' . var_export($booked !== null, true) . ' error ' . ($error ?? '');
     });
 
-    check('a switch that is charged actually moves the plan', function () use ($proration, $subscriptions, $switcher, $bigger): bool|string {
+    check('a switch that is charged actually moves the plan', function() use ($proration, $subscriptions, $switcher, $bigger): bool|string {
         [$ok, $preview, $error] = $proration->applySwitch($switcher, $bigger);
 
         return $ok && $switcher->planId === $bigger->id
             ?: 'ok ' . var_export($ok, true) . ' plan ' . $switcher->planId . ' error ' . ($error ?? '');
     });
 
-    check('switching is recorded with the numbers that were used', function () use ($ledger, $switcher): bool|string {
+    check('switching is recorded with the numbers that were used', function() use ($ledger, $switcher): bool|string {
         $entries = $ledger->getEntriesOfType((int)$switcher->id, LogEntry::TYPE_SWITCHED);
         $data = $entries[0]->getData();
 
@@ -1007,7 +1039,7 @@ try {
 
     $box->setSlots([$slotCoffee, $slotExtra]);
 
-    check('a box with slots saves', function () use ($boxes, $box, &$createdBoxes): bool|string {
+    check('a box with slots saves', function() use ($boxes, $box, &$createdBoxes): bool|string {
         $ok = $boxes->saveBox($box);
         $createdBoxes[] = $box;
 
@@ -1015,13 +1047,13 @@ try {
             ?: json_encode($box->getErrors());
     });
 
-    check('a slot rejects a product that is not in its sources', function () use ($boxes, $box, $mug): bool|string {
+    check('a slot rejects a product that is not in its sources', function() use ($boxes, $box, $mug): bool|string {
         $slots = $boxes->getSlotsByBoxId((int)$box->id);
 
         return !$slots[0]->accepts((int)$mug->id) ?: 'the coffee slot accepted a mug';
     });
 
-    check('a slot with no sources accepts anything', function () use ($mug): bool|string {
+    check('a slot with no sources accepts anything', function() use ($mug): bool|string {
         $slot = new BoxSlot(['name' => 'Anything']);
 
         // A slot that allowed nothing until it was configured would make a half-finished box
@@ -1029,7 +1061,7 @@ try {
         return $slot->accepts((int)$mug->id) ?: 'an empty slot refused everything';
     });
 
-    check('a selection that misses a minimum is refused, with a reason', function () use ($boxes, $box): bool|string {
+    check('a selection that misses a minimum is refused, with a reason', function() use ($boxes, $box): bool|string {
         $slots = $boxes->getSlotsByBoxId((int)$box->id);
         $errors = $boxes->validateSelection($box, [$slots[0]->id => []]);
 
@@ -1037,7 +1069,7 @@ try {
             ?: json_encode($errors);
     });
 
-    check('a selection over a slot maximum is refused', function () use ($boxes, $box, $coffee, $decaf): bool|string {
+    check('a selection over a slot maximum is refused', function() use ($boxes, $box, $coffee, $decaf): bool|string {
         $slots = $boxes->getSlotsByBoxId((int)$box->id);
         $errors = $boxes->validateSelection($box, [
             $slots[0]->id => [$coffee->id => 2, $decaf->id => 2],
@@ -1046,14 +1078,14 @@ try {
         return count($errors) >= 1 ?: 'four items fitted in a two-item slot';
     });
 
-    check('a valid selection passes', function () use ($boxes, $box, $coffee): bool|string {
+    check('a valid selection passes', function() use ($boxes, $box, $coffee): bool|string {
         $slots = $boxes->getSlotsByBoxId((int)$box->id);
         $errors = $boxes->validateSelection($box, [$slots[0]->id => [$coffee->id => 1]]);
 
         return $errors === [] ?: json_encode($errors);
     });
 
-    check('a contents-priced box costs the sum of what is in it', function () use ($boxes, $box, $coffee, $mug): bool|string {
+    check('a contents-priced box costs the sum of what is in it', function() use ($boxes, $box, $coffee, $mug): bool|string {
         $slots = $boxes->getSlotsByBoxId((int)$box->id);
         $items = $boxes->selectionToItems($box, [
             $slots[0]->id => [$coffee->id => 2],
@@ -1064,7 +1096,7 @@ try {
             ?: (string)$boxes->priceContents($box, $items);
     });
 
-    check('a fixed-price box costs its own price whatever is in it', function () use ($boxes, $box, $coffee, $mug): bool|string {
+    check('a fixed-price box costs its own price whatever is in it', function() use ($boxes, $box, $coffee, $mug): bool|string {
         $box->pricing = Box::PRICING_FIXED;
         $box->boxPrice = 25.00;
         $boxes->saveBox($box, false);
@@ -1079,7 +1111,7 @@ try {
             ?: (string)$boxes->priceContents($box, $items);
     });
 
-    check('a base-priced box charges for its add-on slots', function () use ($boxes, $box, $coffee, $mug): bool|string {
+    check('a base-priced box charges for its add-on slots', function() use ($boxes, $box, $coffee, $mug): bool|string {
         $box->pricing = Box::PRICING_BASE;
         $box->boxPrice = 25.00;
         $boxes->saveBox($box, false);
@@ -1095,7 +1127,7 @@ try {
             ?: (string)$boxes->priceContents($box, $items);
     });
 
-    check('a fixed-price box needs a price', function (): bool|string {
+    check('a fixed-price box needs a price', function(): bool|string {
         $bad = new Box(['name' => 'x', 'handle' => 'xyz', 'pricing' => Box::PRICING_FIXED]);
         $bad->validate();
 
@@ -1122,14 +1154,14 @@ try {
     $subscriptions->saveItems($boxSub, $boxes->selectionToItems($box, [$slots[0]->id => [$coffee->id => 2]]));
     $subscriptions->activate($boxSub, clone $anchorStart);
 
-    check('the standing contents ship every cycle', function () use ($boxSub, $boxes): bool|string {
+    check('the standing contents ship every cycle', function() use ($boxSub, $boxes): bool|string {
         $items = $boxes->contentsForCycle($boxSub, $boxSub->cycleCount + 1);
 
         return count($items) === 1 && $items[0]->qty === 2
             ?: count($items) . ' items';
     });
 
-    check('a swap replaces one cycle and leaves the standing set alone', function () use ($subscriptions, $boxes, $box, $boxSub, $decaf, $slots): bool|string {
+    check('a swap replaces one cycle and leaves the standing set alone', function() use ($subscriptions, $boxes, $box, $boxSub, $decaf, $slots): bool|string {
         $cycle = $boxSub->cycleCount + 1;
         $swap = $boxes->selectionToItems($box, [$slots[0]->id => [$decaf->id => 1]], $cycle);
         $subscriptions->saveItems($boxSub, $swap, $cycle);
@@ -1144,7 +1176,7 @@ try {
             ?: 'cycle has ' . ($thisCycle[0]->sku ?? '?') . ', standing has ' . ($standing[0]->sku ?? '?');
     });
 
-    check('a renewal ships the swap and then goes back to normal', function () use ($renewals, $boxes, $boxSub, $decaf, $coffee, &$createdOrders): bool|string {
+    check('a renewal ships the swap and then goes back to normal', function() use ($renewals, $boxes, $boxSub, $decaf, $coffee, &$createdOrders): bool|string {
         $result = $renewals->renew($boxSub, null, true);
 
         if ($result->order) {
@@ -1162,20 +1194,20 @@ try {
             ?: 'shipped ' . var_export($shipped, true) . ' next ' . var_export($next[0]->purchasableId ?? null, true);
     });
 
-    check('contents lock before the shipment goes out', function () use ($boxes, $boxSub): bool|string {
+    check('contents lock before the shipment goes out', function() use ($boxes, $boxSub): bool|string {
         $boxSub->dateNextPayment = (new DateTime())->modify('+2 hours');
 
         // lockHours is 24, so two hours out is inside the lock.
         return $boxes->contentsAreLocked($boxSub) === true ?: 'not locked two hours before shipping';
     });
 
-    check('contents are editable well before that', function () use ($boxes, $boxSub): bool|string {
+    check('contents are editable well before that', function() use ($boxes, $boxSub): bool|string {
         $boxSub->dateNextPayment = (new DateTime())->modify('+10 days');
 
         return $boxes->contentsAreLocked($boxSub) === false ?: 'locked ten days out';
     });
 
-    check('a surprise box avoids what the subscriber has just had', function () use ($boxes, $box, $boxSub, $subscriptions): bool|string {
+    check('a surprise box avoids what the subscriber has just had', function() use ($boxes, $box, $boxSub, $subscriptions): bool|string {
         $box->mode = Box::MODE_SURPRISE;
         $box->avoidRepeatCycles = 5;
         $boxes->saveBox($box, false);
@@ -1189,7 +1221,7 @@ try {
         return $ok ?: 'the surprise box came back empty';
     });
 
-    check('an exhausted pool repeats rather than shipping nothing', function () use ($boxes, $box, $subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
+    check('an exhausted pool repeats rather than shipping nothing', function() use ($boxes, $box, $subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
         $temp = $subscriptions->createSubscription($monthly, (int)$user->id, [], ['boxId' => $box->id]);
         $createdSubscriptions[] = $temp;
         $temp->cycleCount = 3;
@@ -1204,7 +1236,7 @@ try {
     // ------------------------------------------------------------------------
     section('Mixed carts');
 
-    check('the recurring options are just line-item options', function () use ($carts, $monthly): bool|string {
+    check('the recurring options are just line-item options', function() use ($carts, $monthly): bool|string {
         $options = $carts->optionsFor($monthly, ['subscribrPrepaid' => 6]);
 
         return $options[SubscribrCarts::OPTION_PLAN] === $monthly->handle
@@ -1212,7 +1244,7 @@ try {
             ?: json_encode($options);
     });
 
-    check('empty extras are dropped rather than hashed into the line', function () use ($carts, $monthly): bool|string {
+    check('empty extras are dropped rather than hashed into the line', function() use ($carts, $monthly): bool|string {
         $options = $carts->optionsFor($monthly, ['subscribrGiftEmail' => '', 'subscribrPrepaid' => null]);
 
         // Commerce de-duplicates line items on a hash of their options, so an empty key would make
@@ -1233,14 +1265,14 @@ try {
     $cart->recalculate();
     $elements->saveElement($cart, false);
 
-    check('a cart can hold a subscription and a one-off at the same time', function () use ($carts, $cart): bool|string {
+    check('a cart can hold a subscription and a one-off at the same time', function() use ($carts, $cart): bool|string {
         return $carts->getHasRecurringItems($cart)
             && $carts->getHasOneOffItems($cart)
             && count($carts->getRecurringLineItems($cart)) === 1
             ?: 'recurring ' . count($carts->getRecurringLineItems($cart));
     });
 
-    check('the same product bought once and monthly stays two separate lines', function () use ($carts, $commerce, $cart, $coffee, $monthly, $elements): bool|string {
+    check('the same product bought once and monthly stays two separate lines', function() use ($carts, $commerce, $cart, $coffee, $monthly, $elements): bool|string {
         // Commerce de-duplicates by purchasable ID *and* an options hash, which is the whole
         // reason a mixed cart needs no cart machinery of its own.
         $alsoOnce = $commerce->getLineItems()->createLineItem($cart, (int)$coffee->id, [], 1);
@@ -1253,7 +1285,7 @@ try {
         return count($forCoffee) === 2 ?: count($forCoffee) . ' lines for the same coffee';
     });
 
-    check('the cart reports what it commits the customer to after today', function () use ($carts, $cart): bool|string {
+    check('the cart reports what it commits the customer to after today', function() use ($carts, $cart): bool|string {
         $summary = $carts->getRecurringSummary($cart);
         $first = reset($summary);
 
@@ -1263,7 +1295,7 @@ try {
             ?: json_encode($summary);
     });
 
-    check('a guest cart with a subscription in it is refused, at the cart', function () use ($carts, $commerce, $elements, $coffee, $monthly, &$createdOrders): bool|string {
+    check('a guest cart with a subscription in it is refused, at the cart', function() use ($carts, $commerce, $elements, $coffee, $monthly, &$createdOrders): bool|string {
         $guest = new Order();
         $guest->number = $commerce->getCarts()->generateCartNumber();
         $elements->saveElement($guest, false);
@@ -1281,7 +1313,7 @@ try {
             ?: json_encode($errors);
     });
 
-    check('completing the order turns the recurring lines into a subscription', function () use ($carts, $cart, $elements, &$createdSubscriptions): bool|string {
+    check('completing the order turns the recurring lines into a subscription', function() use ($carts, $cart, $elements, &$createdSubscriptions): bool|string {
         $cart->markAsComplete();
         $fresh = Order::find()->id($cart->id)->status(null)->one();
 
@@ -1294,7 +1326,7 @@ try {
         return count($made) === 1 ?: count($made) . ' subscriptions from one order';
     });
 
-    check('the subscription it made is running and knows its plan', function () use ($cart, $monthly): bool|string {
+    check('the subscription it made is running and knows its plan', function() use ($cart, $monthly): bool|string {
         $made = Plugin::getInstance()->getSubscriptions()->getSubscriptionsForOrder((int)$cart->id)[0];
 
         return $made->planId === $monthly->id
@@ -1302,7 +1334,7 @@ try {
             ?: 'plan ' . $made->planId . ' status ' . $made->getStatus();
     });
 
-    check('completing the same order twice does not make a second subscription', function () use ($carts, $cart): bool|string {
+    check('completing the same order twice does not make a second subscription', function() use ($carts, $cart): bool|string {
         // The order-complete event can fire more than once, and a customer with two identical
         // subscriptions is a refund and an apology.
         $carts->materialize(Order::find()->id($cart->id)->status(null)->one());
@@ -1334,7 +1366,7 @@ try {
         'cycles' => 3,
     ]);
 
-    check('a gift is created against the purchaser and does not renew', function () use ($gift, $giftSub): bool|string {
+    check('a gift is created against the purchaser and does not renew', function() use ($gift, $giftSub): bool|string {
         // A gift that silently started billing the giver's card in month thirteen would be
         // indefensible.
         return $gift->id
@@ -1343,19 +1375,19 @@ try {
             ?: 'autoRenew ' . var_export($giftSub->autoRenew, true) . ' prepaid ' . $giftSub->prepaidCyclesRemaining;
     });
 
-    check('the clock does not start until it is claimed', function () use ($giftSub): bool|string {
+    check('the clock does not start until it is claimed', function() use ($giftSub): bool|string {
         // A subscription bought in November for Christmas must not have used a month of itself by
         // the time it is opened.
         return $giftSub->getStatus() === Subscription::STATUS_PENDING && $giftSub->dateStarted === null
             ?: $giftSub->getStatus();
     });
 
-    check('an unclaimed gift is claimable and has an expiry', function () use ($gift): bool|string {
+    check('an unclaimed gift is claimable and has an expiry', function() use ($gift): bool|string {
         return $gift->getIsClaimable() && $gift->dateExpires !== null
             ?: 'claimable ' . var_export($gift->getIsClaimable(), true);
     });
 
-    check('claiming it moves the subscription to the recipient and starts it', function () use ($gifts, $gift, $suffix, $elements, &$createdUsers): bool|string {
+    check('claiming it moves the subscription to the recipient and starts it', function() use ($gifts, $gift, $suffix, $elements, &$createdUsers): bool|string {
         $recipient = new User();
         $recipient->username = 'gift_' . $suffix;
         $recipient->email = 'recipient_' . $suffix . '@example.test';
@@ -1374,7 +1406,7 @@ try {
             ?: ($error ?? 'status ' . ($claimed?->getStatus() ?? 'null'));
     });
 
-    check('the purchaser’s card does not transfer with it', function () use ($gifts, $gift): bool|string {
+    check('the purchaser’s card does not transfer with it', function() use ($gifts, $gift): bool|string {
         $claimed = Plugin::getInstance()->getSubscriptions()->getSubscriptionById((int)$gift->subscriptionId);
 
         // Nothing about a gift may charge anybody again without them asking.
@@ -1382,7 +1414,7 @@ try {
             ?: 'source ' . var_export($claimed->paymentSourceId, true);
     });
 
-    check('a gift cannot be claimed twice', function () use ($gifts, $gift, $createdUsers): bool|string {
+    check('a gift cannot be claimed twice', function() use ($gifts, $gift, $createdUsers): bool|string {
         $fresh = $gifts->getGiftByToken($gift->token);
         [$claimed, $error] = $gifts->claim($fresh, end($createdUsers));
 
@@ -1392,7 +1424,7 @@ try {
     // ------------------------------------------------------------------------
     section('Manual renewal — a gateway that cannot store a card');
 
-    check('a subscription with no stored card is invoiced rather than refused', function () use ($subscriptions, $renewals, $monthly, $user, $coffee, $anchorStart, &$createdSubscriptions, &$createdOrders): bool|string {
+    check('a subscription with no stored card is invoiced rather than refused', function() use ($subscriptions, $renewals, $monthly, $user, $coffee, $anchorStart, &$createdSubscriptions, &$createdOrders): bool|string {
         $temp = $subscriptions->createSubscription($monthly, (int)$user->id, [
             new Item(['purchasableId' => $coffee->id, 'qty' => 1, 'price' => 12.00, 'description' => 'Coffee']),
         ], ['isManual' => true]);
@@ -1409,7 +1441,7 @@ try {
             ?: $result->outcome . ' — ' . ($result->message ?? '');
     });
 
-    check('the invoice is left as a cart, so Commerce’s own checkout can take it', function () use ($createdOrders): bool|string {
+    check('the invoice is left as a cart, so Commerce’s own checkout can take it', function() use ($createdOrders): bool|string {
         $order = end($createdOrders);
 
         // An incomplete order is a cart, and a cart has a load-cart URL that drops the subscriber
@@ -1417,7 +1449,7 @@ try {
         return $order->isCompleted === false ?: 'the invoice was completed and cannot be loaded as a cart';
     });
 
-    check('an invoiced cycle still advances the schedule', function () use ($createdSubscriptions): bool|string {
+    check('an invoiced cycle still advances the schedule', function() use ($createdSubscriptions): bool|string {
         $temp = null;
 
         foreach ($createdSubscriptions as $candidate) {
@@ -1429,7 +1461,7 @@ try {
         return $temp && $temp->cycleCount === 1 ?: 'cycle ' . ($temp?->cycleCount ?? 'n/a');
     });
 
-    check('paying the invoice recovers the cycle exactly once', function () use ($renewals, $createdOrders, $createdSubscriptions): bool|string {
+    check('paying the invoice recovers the cycle exactly once', function() use ($renewals, $createdOrders, $createdSubscriptions): bool|string {
         $order = null;
 
         foreach ($createdOrders as $candidate) {
@@ -1453,7 +1485,7 @@ try {
     // ------------------------------------------------------------------------
     section('The catch-up guard');
 
-    check('a queue that was off for months does not bill every missed cycle', function () use ($subscriptions, $renewals, $monthly, $user, $coffee, $ledger, &$createdSubscriptions): bool|string {
+    check('a queue that was off for months does not bill every missed cycle', function() use ($subscriptions, $renewals, $monthly, $user, $coffee, $ledger, &$createdSubscriptions): bool|string {
         $settings = Plugin::getInstance()->getSettings();
         $settings->renewalCatchUpDays = 7;
         $settings->billMissedCycles = false;
@@ -1472,7 +1504,7 @@ try {
             ?: $result->outcome . ' cycles ' . $temp->cycleCount;
     });
 
-    check('the skipped cycles are recorded rather than silently dropped', function () use ($ledger, $createdSubscriptions): bool|string {
+    check('the skipped cycles are recorded rather than silently dropped', function() use ($ledger, $createdSubscriptions): bool|string {
         $temp = end($createdSubscriptions);
         $notes = $ledger->getEntriesOfType((int)$temp->id, LogEntry::TYPE_NOTE);
 
@@ -1488,7 +1520,7 @@ try {
     // ------------------------------------------------------------------------
     section('Fixed-term plans');
 
-    check('a plan with a cycle count ends by itself', function () use ($plans, $subscriptions, $renewals, $user, $coffee, $source, $dummy, $storeId, $suffix, $tag, $anchorStart, &$createdPlans, &$createdSubscriptions, &$createdOrders): bool|string {
+    check('a plan with a cycle count ends by itself', function() use ($plans, $subscriptions, $renewals, $user, $coffee, $source, $dummy, $storeId, $suffix, $tag, $anchorStart, &$createdPlans, &$createdSubscriptions, &$createdOrders): bool|string {
         $term = new Plan([
             'name' => $tag . ' Six months',
             'handle' => 'sbr' . $suffix . 'Term',
@@ -1525,7 +1557,7 @@ try {
     // ------------------------------------------------------------------------
     section('The change window');
 
-    check('a change too close to the renewal is refused, with a reason', function () use ($schedules, $subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
+    check('a change too close to the renewal is refused, with a reason', function() use ($schedules, $subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
         Plugin::getInstance()->getSettings()->changeLockHours = 12;
 
         $temp = $subscriptions->createSubscription($monthly, (int)$user->id, [
@@ -1541,7 +1573,7 @@ try {
         return !$open && $reason !== null ?: 'window open ' . var_export($open, true);
     });
 
-    check('a change well ahead of it is allowed', function () use ($schedules, $createdSubscriptions, $subscriptions): bool|string {
+    check('a change well ahead of it is allowed', function() use ($schedules, $createdSubscriptions, $subscriptions): bool|string {
         $temp = end($createdSubscriptions);
         $temp->dateNextPayment = (new DateTime())->modify('+20 days');
         $subscriptions->save($temp);
@@ -1554,7 +1586,7 @@ try {
     // ------------------------------------------------------------------------
     section('Quantity');
 
-    check('a quantity change takes effect at the next renewal, not today', function () use ($subscriptions, $ledger, $createdSubscriptions): bool|string {
+    check('a quantity change takes effect at the next renewal, not today', function() use ($subscriptions, $ledger, $createdSubscriptions): bool|string {
         $temp = end($createdSubscriptions);
         $before = $temp->getRenewalSubtotal();
 
@@ -1569,13 +1601,13 @@ try {
     // ------------------------------------------------------------------------
     section('Element queries');
 
-    check('subscriptions can be found by their reference', function () use ($subscriptions, $subscription): bool|string {
+    check('subscriptions can be found by their reference', function() use ($subscriptions, $subscription): bool|string {
         $found = $subscriptions->getSubscriptionByReference($subscription->reference);
 
         return $found?->id === $subscription->id ?: 'not found';
     });
 
-    check('subscriptions can be filtered by status', function () use ($user): bool|string {
+    check('subscriptions can be filtered by status', function() use ($user): bool|string {
         $active = Subscription::find()
             ->status(null)
             ->userId($user->id)
@@ -1585,14 +1617,14 @@ try {
         return $active > 0 ?: 'no active subscriptions for the test user';
     });
 
-    check('“renewing within” finds only live subscriptions', function () use ($user): bool|string {
+    check('“renewing within” finds only live subscriptions', function() use ($user): bool|string {
         $ids = Subscription::find()->status(null)->renewingWithin(3650)->ids();
         $expired = Subscription::find()->status(null)->id($ids)->subscriptionStatus(Subscription::STATUS_EXPIRED)->count();
 
         return $expired === 0 ?: $expired . ' expired subscriptions in the renewing list';
     });
 
-    check('the due query excludes paused subscriptions', function () use ($subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
+    check('the due query excludes paused subscriptions', function() use ($subscriptions, $monthly, $user, $coffee, &$createdSubscriptions): bool|string {
         $temp = $subscriptions->createSubscription($monthly, (int)$user->id, [
             new Item(['purchasableId' => $coffee->id, 'qty' => 1, 'price' => 12.00]),
         ]);
@@ -1605,7 +1637,7 @@ try {
         return !in_array((int)$temp->id, $dueIds, true) ?: 'a paused subscription was due';
     });
 
-    check('the cached renewal price matches the items', function () use ($subscriptions, $boxSub): bool|string {
+    check('the cached renewal price matches the items', function() use ($subscriptions, $boxSub): bool|string {
         $subscriptions->refreshRenewalPrice($boxSub);
 
         return abs($boxSub->renewalPrice - $boxSub->getRenewalSubtotal()) < 0.001
@@ -1615,7 +1647,7 @@ try {
     // ------------------------------------------------------------------------
     section('Editions');
 
-    check('Lite switches off boxes, skip, swap, prepaid, gifts and switching', function () use ($plugin): bool|string {
+    check('Lite switches off boxes, skip, swap, prepaid, gifts and switching', function() use ($plugin): bool|string {
         $plugin->edition = Plugin::EDITION_LITE;
 
         $off = !$plugin->getEffectiveBoxesEnabled()
@@ -1631,7 +1663,7 @@ try {
         return $off ?: 'a Pro feature was on in Lite';
     });
 
-    check('renewals, dunning, pause and cancel are in Lite', function () use ($plugin, $renewals, $subscriptions, $dunning): bool|string {
+    check('renewals, dunning, pause and cancel are in Lite', function() use ($plugin, $renewals, $subscriptions, $dunning): bool|string {
         $plugin->edition = Plugin::EDITION_LITE;
 
         // A free-tier store whose cards decline still needs its money, and a paused subscriber is
@@ -1645,7 +1677,7 @@ try {
         return $available ?: 'a Lite feature was missing';
     });
 
-    check('a Lite install reports its suppressed Pro configuration', function () use ($plugin): bool|string {
+    check('a Lite install reports its suppressed Pro configuration', function() use ($plugin): bool|string {
         $plugin->edition = Plugin::EDITION_LITE;
         $suppressed = $plugin->getHasSuppressedProSettings();
         $plugin->edition = Plugin::EDITION_PRO;
@@ -1654,14 +1686,30 @@ try {
         return $suppressed ?: 'the boxes in the database were not reported';
     });
 
-    check('Pro reports nothing suppressed', function () use ($plugin): bool|string {
+    check('Pro reports nothing suppressed', function() use ($plugin): bool|string {
         return $plugin->getHasSuppressedProSettings() === false ?: 'Pro reported suppressed settings';
+    });
+
+    check('two claims racing on one token cannot both win', function() use ($gifts, $gift, $createdUsers): bool|string {
+        // Both requests read the gift before either wrote it, so both saw it as claimable. The
+        // claim is a conditional update; the second one must find the row already taken.
+        $stale = $gifts->getGiftByToken($gift->token);
+        $stale->recipientId = null;
+        $stale->dateClaimed = null;
+
+        if (!$stale->getIsClaimable()) {
+            return 'the stale copy is not claimable, so this does not test the race';
+        }
+
+        [$claimed, $error] = $gifts->claim($stale, end($createdUsers));
+
+        return $claimed === null && $error !== null ?: 'a stale copy claimed the gift a second time';
     });
 
     // ------------------------------------------------------------------------
     section('Housekeeping');
 
-    check('every user-facing string is braced next to a typographic quote', function (): bool|string {
+    check('every user-facing string is braced next to a typographic quote', function(): bool|string {
         // PHP identifiers may contain bytes 0x80–0xFF, so "Box “$name” saved." parses as a
         // variable called `name”` and fatals at runtime, not at lint time.
         $bad = [];
@@ -1682,7 +1730,16 @@ try {
         return $bad === [] ?: implode(', ', $bad);
     });
 
-    check('no plugin settings are marked required', function () use ($plugin): bool|string {
+    check('only an admin can change the settings', function(): bool|string {
+        // Settings are project config — billing, dunning and email templates for the whole store —
+        // and must not be writable by everybody who can open the plugin.
+        $source = file_get_contents('/var/www/craft-subscribr/src/controllers/SettingsController.php');
+
+        return str_contains($source, "requireAdmin(\$action->id === 'save')") && !str_contains($source, "requirePermission('accessPlugin-subscribr')")
+            ?: 'SettingsController does not require an admin';
+    });
+
+    check('no plugin settings are marked required', function() use ($plugin): bool|string {
         // A settings model with a required attribute cannot be saved on a fresh install, because
         // Craft validates it before the first edit.
         foreach ((new Settings())->rules() as $rule) {
@@ -1694,7 +1751,7 @@ try {
         return true;
     });
 
-    check('the settings model round-trips through its own array', function (): bool|string {
+    check('the settings model round-trips through its own array', function(): bool|string {
         $settings = new Settings(['renewalBatchSize' => 25, 'dunningFinalAction' => 'pause']);
         $again = new Settings($settings->toArray());
 
@@ -1702,7 +1759,7 @@ try {
             ?: json_encode($again->toArray());
     });
 
-    check('the retry schedule is cleaned, sorted and de-duplicated', function (): bool|string {
+    check('the retry schedule is cleaned, sorted and de-duplicated', function(): bool|string {
         $settings = new Settings(['defaultRetryHours' => [72, 24, 24, 0, -5, 168]]);
 
         // A profile editor that lets somebody type "24, 12, 24" must not produce a retry schedule
@@ -1711,7 +1768,7 @@ try {
             ?: json_encode($settings->getDefaultRetryHours());
     });
 
-    check('a plan exports without any IDs in it', function () use ($plans, $monthly): bool|string {
+    check('a plan exports without any IDs in it', function() use ($plans, $monthly): bool|string {
         $data = $plans->toExportArray($monthly);
 
         return !array_key_exists('id', $data)
@@ -1721,7 +1778,7 @@ try {
             ?: json_encode(array_keys($data));
     });
 
-    check('every table Subscribr installed exists', function (): bool|string {
+    check('every table Subscribr installed exists', function(): bool|string {
         $missing = [];
         $schema = Craft::$app->getDb()->getSchema();
 

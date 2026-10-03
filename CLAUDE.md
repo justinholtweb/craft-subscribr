@@ -157,6 +157,9 @@ it to a support ticket.
   `'skipOnEmpty' => false`.
 - **PHP identifiers may contain bytes 0x80–0xFF**, so `"Box “$name” saved."` parses as a variable
   called `name”` and fatals at *runtime*, not at lint time. There is a check in the suite for this.
+- **A date input posts a bare `Y-m-d`, and `DateTimeHelper::toDateTime()` reads that as UTC.**
+  A customer who picks the 13th to restart a pause gets the evening of the 12th in any store west of
+  Greenwich. `Subscriptions::resolvePauseUntil()` passes `assumeSystemTimeZone: true`.
 - **A blank number field means "not set", which is not zero** — on a plan price, zero means free and
   null means "use the product's price". The controllers have `_floatOrNull()` for this.
 - **An editable table with spare blank rows posts them.** The dunning stage rows default to
@@ -173,7 +176,7 @@ See also `[[craft-plugin-gotchas]]` and `[[craft-commerce-shipping-gotchas]]` in
 No local PHP on this Mac. Everything runs inside the plugin-testing container:
 
 ```sh
-docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-subscribr/tests/integration/checks.php   # 130 checks
+docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-subscribr/tests/integration/checks.php   # 134 checks
 docker exec ddev-plugin-testing-web bash -c 'find /var/www/craft-subscribr/src -name "*.php" -print0 | xargs -0 -n1 php -l'
 ```
 
@@ -186,6 +189,14 @@ suite is not run and eventually trips the catch-up guard — correct behaviour a
 
 The edition and settings are changed **in memory** rather than saved: project config is contended in
 this harness and a console script that writes it races the queue runner.
+
+Static analysis runs in the `phpstan-runner` DDEV project (PHP 8.4, `~/Sites` mounted at `/sites`):
+
+```sh
+cd ~/Sites/phpstan-runner
+ddev exec -d /sites/craft-subscribr composer phpstan     # level 5, clean
+ddev exec -d /sites/craft-subscribr composer ecs         # Craft's coding standard
+```
 
 ## Coding conventions
 

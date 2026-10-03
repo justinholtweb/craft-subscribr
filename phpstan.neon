@@ -1,0 +1,24 @@
+includes:
+    - vendor/craftcms/phpstan/phpstan.neon
+
+parameters:
+    level: 5
+    paths:
+        - src
+    excludePaths:
+        - src/templates/*
+    ignoreErrors:
+        # Defensive by intent: a date that phpstan has narrowed to non-null in this request may
+        # still be null on an element loaded from a row written by an older version.
+        -
+            identifier: nullsafe.neverNull
+            paths:
+                - src/services/Dunning.php
+                - src/services/Subscriptions.php
+        # Kept as guards against a caller constructing the query or the model by hand.
+        -
+            identifier: identical.alwaysFalse
+            path: src/elements/db/SubscriptionQuery.php
+        -
+            identifier: greater.alwaysTrue
+            path: src/services/Proration.php

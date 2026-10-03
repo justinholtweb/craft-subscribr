@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linejoin="round">
+  <!-- A line-art silhouette of the app icon, not the icon itself.
+       The icon's header bar is a solid 57x13.5 slab; at watermark scale that is a ~670px
+       grey block across the slide, which reads as a mistake rather than as a mark. Every
+       filled shape is drawn as an outline here for the same reason. -->
+  <path d="M30.1 17v11"/>
+  <path d="M60.1 17v11"/>
+  <path d="M19 24h56v8.5H19z"/>
+  <path d="M19 32.5v25"/>
+  <path d="M72 32.5v9.5"/>
+  <rect x="42" y="40" width="6.6" height="6.6"/>
+  <rect x="57" y="40" width="6.6" height="6.6"/>
+  <rect x="27" y="49.9" width="6.6" height="6.6"/>
+  <path d="M42 49.9h6.6L44.6 56.5H42z"/>
+  <path d="M49.2 53.9q10.3-6.6 24.4-6v6.4q-13.6.3-24.4-.4z"/>
+  <path d="M73.6 45.6 84.4 51.6 73.6 57.6z"/>
+  <path d="M18.9 61.7h9.4l5.3 5.3v14.3a1.2 1.2 0 0 1-1.2 1.2H18.9a1.2 1.2 0 0 1-1.2-1.2V62.9a1.2 1.2 0 0 1 1.2-1.2z"/>
+  <path d="M42.9 61.7h9.4l5.3 5.3v14.3a1.2 1.2 0 0 1-1.2 1.2H42.9a1.2 1.2 0 0 1-1.2-1.2V62.9a1.2 1.2 0 0 1 1.2-1.2z"/>
+  <path d="M66.9 61.7h9.4l5.3 5.3v14.3a1.2 1.2 0 0 1-1.2 1.2H66.9a1.2 1.2 0 0 1-1.2-1.2V62.9a1.2 1.2 0 0 1 1.2-1.2z"/>
+</svg>

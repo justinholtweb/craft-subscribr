@@ -118,19 +118,15 @@ class PortalController extends Controller
             return $this->_fail($subscription, Craft::t('subscribr', 'This subscription can’t be paused.'));
         }
 
-        $until = $this->request->getBodyParam('until');
-        $until = $until ? new DateTime($until) : null;
+        $subscriptions = Plugin::getInstance()->getSubscriptions();
+        [$until, $error] = $subscriptions->resolvePauseUntil($subscription, $this->request->getBodyParam('until'));
 
-        if ($plan->maxPauseCycles > 0 && $until === null) {
-            // A capped pause has to have an end, or the cap means nothing.
-            $until = $subscription->getCadence()->next(new DateTime());
-
-            for ($i = 1; $i < $plan->maxPauseCycles; $i++) {
-                $until = $subscription->getCadence()->next($until);
-            }
+        if ($error !== null) {
+            return $this->_fail($subscription, $error);
         }
 
-        Plugin::getInstance()->getSubscriptions()->pause($subscription, $until, $this->request->getBodyParam('reason'));
+        $reason = $this->request->getBodyParam('reason');
+        $subscriptions->pause($subscription, $until, is_string($reason) && $reason !== '' ? $reason : null);
 
         return $this->_ok($subscription, $until
             ? Craft::t('subscribr', 'Paused. We’ll start again on {date}.', ['date' => $until->format('j M Y')])

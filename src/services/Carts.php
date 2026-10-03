@@ -241,7 +241,7 @@ class Carts extends Component
             }
         }
 
-        return array_values(array_filter($created));
+        return $created;
     }
 
     // Internals
@@ -250,7 +250,7 @@ class Carts extends Component
     /**
      * @param LineItem[] $lineItems
      */
-    private function _createFromLineItems(Order $order, Plan $plan, array $lineItems, ?User $subscriber): ?Subscription
+    private function _createFromLineItems(Order $order, Plan $plan, array $lineItems, ?User $subscriber): Subscription
     {
         $plugin = Plugin::getInstance();
         $first = $lineItems[0];
@@ -290,7 +290,7 @@ class Carts extends Component
         $subscription = $plugin->getSubscriptions()->createSubscription($plan, $subscriber?->id, $items, [
             'orderId' => $order->id,
             'currency' => $order->currency,
-            'gatewayId' => $paymentSource?->gatewayId ?? $order->gatewayId,
+            'gatewayId' => $paymentSource->gatewayId ?? $order->gatewayId,
             'paymentSourceId' => $paymentSource?->id,
             'shippingAddressId' => $order->shippingAddressId,
             'billingAddressId' => $order->billingAddressId,

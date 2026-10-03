@@ -15,6 +15,7 @@ use craft\db\Query;
 use craft\elements\User;
 use craft\events\DefineHtmlEvent;
 use craft\events\RegisterComponentTypesEvent;
+use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterUserPermissionsEvent;
 use craft\services\Dashboard;
@@ -23,7 +24,6 @@ use craft\services\UserPermissions;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
-use craft\events\RegisterTemplateRootsEvent;
 use justinholtweb\subscribr\adjusters\SubscriptionAdjuster;
 use justinholtweb\subscribr\db\Table;
 use justinholtweb\subscribr\elements\Subscription;
@@ -330,14 +330,14 @@ class Plugin extends BasePlugin
      */
     private function _registerSiteTemplates(): void
     {
-        Event::on(View::class, View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS, static function (RegisterTemplateRootsEvent $event): void {
+        Event::on(View::class, View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS, static function(RegisterTemplateRootsEvent $event): void {
             $event->roots['subscribr'] = __DIR__ . '/templates';
         });
     }
 
     private function _registerTwigVariable(): void
     {
-        Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, static function (Event $event): void {
+        Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, static function(Event $event): void {
             /** @var CraftVariable $variable */
             $variable = $event->sender;
             $variable->set('subscribr', SubscribrVariable::class);
@@ -346,21 +346,21 @@ class Plugin extends BasePlugin
 
     private function _registerElementTypes(): void
     {
-        Event::on(Elements::class, Elements::EVENT_REGISTER_ELEMENT_TYPES, static function (RegisterComponentTypesEvent $event): void {
+        Event::on(Elements::class, Elements::EVENT_REGISTER_ELEMENT_TYPES, static function(RegisterComponentTypesEvent $event): void {
             $event->types[] = Subscription::class;
         });
     }
 
     private function _registerWidgets(): void
     {
-        Event::on(Dashboard::class, Dashboard::EVENT_REGISTER_WIDGET_TYPES, static function (RegisterComponentTypesEvent $event): void {
+        Event::on(Dashboard::class, Dashboard::EVENT_REGISTER_WIDGET_TYPES, static function(RegisterComponentTypesEvent $event): void {
             $event->types[] = SubscriptionsWidget::class;
         });
     }
 
     private function _registerAdjuster(): void
     {
-        Event::on(OrderAdjustments::class, OrderAdjustments::EVENT_REGISTER_ORDER_ADJUSTERS, static function (RegisterComponentTypesEvent $event): void {
+        Event::on(OrderAdjustments::class, OrderAdjustments::EVENT_REGISTER_ORDER_ADJUSTERS, static function(RegisterComponentTypesEvent $event): void {
             $event->types[] = SubscriptionAdjuster::class;
         });
     }
@@ -370,7 +370,7 @@ class Plugin extends BasePlugin
         // Order completion does two jobs: turn a signup into subscriptions, and recover a manual
         // renewal the customer has just paid. Both are idempotent, because this event can fire
         // more than once for one order and neither is safe to do twice.
-        Event::on(Order::class, Order::EVENT_AFTER_COMPLETE_ORDER, static function (Event $event): void {
+        Event::on(Order::class, Order::EVENT_AFTER_COMPLETE_ORDER, static function(Event $event): void {
             /** @var Order $order */
             $order = $event->sender;
             $plugin = self::getInstance();
@@ -395,7 +395,7 @@ class Plugin extends BasePlugin
      */
     private function _protectRenewalCarts(): void
     {
-        Event::on(CommerceCarts::class, CommerceCarts::EVENT_BEFORE_PURGE_INACTIVE_CARTS, static function (CartPurgeEvent $event): void {
+        Event::on(CommerceCarts::class, CommerceCarts::EVENT_BEFORE_PURGE_INACTIVE_CARTS, static function(CartPurgeEvent $event): void {
             $event->inactiveCartsQuery->andWhere([
                 'not in',
                 'orders.id',
@@ -410,7 +410,7 @@ class Plugin extends BasePlugin
      */
     private function _registerUserPanel(): void
     {
-        Event::on(User::class, User::EVENT_DEFINE_SIDEBAR_HTML, static function (DefineHtmlEvent $event): void {
+        Event::on(User::class, User::EVENT_DEFINE_SIDEBAR_HTML, static function(DefineHtmlEvent $event): void {
             /** @var User $user */
             $user = $event->sender;
             $plugin = self::getInstance();
@@ -433,7 +433,7 @@ class Plugin extends BasePlugin
 
     private function _registerPermissions(): void
     {
-        Event::on(UserPermissions::class, UserPermissions::EVENT_REGISTER_PERMISSIONS, static function (RegisterUserPermissionsEvent $event): void {
+        Event::on(UserPermissions::class, UserPermissions::EVENT_REGISTER_PERMISSIONS, static function(RegisterUserPermissionsEvent $event): void {
             $event->permissions[] = [
                 'heading' => Craft::t('subscribr', 'Subscribr'),
                 'permissions' => [
@@ -461,7 +461,7 @@ class Plugin extends BasePlugin
 
     private function _registerRoutes(): void
     {
-        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, static function (RegisterUrlRulesEvent $event): void {
+        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, static function(RegisterUrlRulesEvent $event): void {
             $event->rules = array_merge($event->rules, [
                 'subscribr' => 'subscribr/subscriptions/index',
                 'subscribr/subscriptions' => 'subscribr/subscriptions/index',
@@ -480,7 +480,7 @@ class Plugin extends BasePlugin
             ]);
         });
 
-        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, static function (RegisterUrlRulesEvent $event): void {
+        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, static function(RegisterUrlRulesEvent $event): void {
             $settings = self::getInstance()?->getSettings();
 
             if ($settings === null || !$settings->enablePortal) {

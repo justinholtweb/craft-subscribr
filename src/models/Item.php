@@ -83,7 +83,9 @@ class Item extends Model
             return null;
         }
 
-        return Commerce::getInstance()->getPurchasables()->getPurchasableById($this->purchasableId);
+        $purchasable = Commerce::getInstance()->getPurchasables()->getPurchasableById($this->purchasableId);
+
+        return $purchasable instanceof Purchasable ? $purchasable : null;
     }
 
     public function getIsStanding(): bool

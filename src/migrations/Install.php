@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace justinholtweb\subscribr\migrations;
 
+use craft\commerce\db\Table as CommerceTable;
 use craft\db\Migration;
 use craft\db\Table as CraftTable;
-use craft\commerce\db\Table as CommerceTable;
 use justinholtweb\subscribr\db\Table;
 
 /**

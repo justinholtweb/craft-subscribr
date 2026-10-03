@@ -175,13 +175,13 @@ class SubscribrVariable
         $live = $subscription->getIsLive();
 
         return [
-            'skip' => $live && $inWindow && $plugin->getEffectiveSkipEnabled() && ($plan?->allowSkip ?? false) && $this->_skipsLeft($subscription) !== 0,
-            'pause' => $live && ($plan?->allowPause ?? false) && !$subscription->getIsPaused(),
+            'skip' => $live && $inWindow && $plugin->getEffectiveSkipEnabled() && ($plan->allowSkip ?? false) && $this->_skipsLeft($subscription) !== 0,
+            'pause' => $live && ($plan->allowPause ?? false) && !$subscription->getIsPaused(),
             'resume' => $subscription->getIsPaused(),
-            'swap' => $live && $inWindow && $plugin->getEffectiveSwapEnabled() && ($plan?->allowSwap ?? false) && $subscription->getBox()?->allowSwap === true,
-            'switch' => $live && $plugin->getEffectiveSwitchingEnabled() && ($plan?->allowSwitch ?? false),
-            'quantity' => $live && ($plan?->allowQuantityChange ?? false),
-            'cancel' => $live && ($plan?->allowCancel ?? false) && !$subscription->getIsCanceled(),
+            'swap' => $live && $inWindow && $plugin->getEffectiveSwapEnabled() && ($plan->allowSwap ?? false) && $subscription->getBox()?->allowSwap === true,
+            'switch' => $live && $plugin->getEffectiveSwitchingEnabled() && ($plan->allowSwitch ?? false),
+            'quantity' => $live && ($plan->allowQuantityChange ?? false),
+            'cancel' => $live && ($plan->allowCancel ?? false) && !$subscription->getIsCanceled(),
             'uncancel' => $subscription->getStatus() === Subscription::STATUS_CANCELED,
             'updatePayment' => $live,
         ];

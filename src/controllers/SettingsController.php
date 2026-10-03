@@ -19,7 +19,10 @@ class SettingsController extends Controller
             return false;
         }
 
-        $this->requirePermission('accessPlugin-subscribr');
+        // Settings are project config: billing, dunning and email templates for the whole store.
+        // Viewing them needs an admin; changing them also needs admin changes to be allowed here,
+        // or a production edit would be undone by the next `project-config/apply`.
+        $this->requireAdmin($action->id === 'save');
 
         return true;
     }

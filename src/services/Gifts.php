@@ -190,7 +190,7 @@ class Gifts extends Component
         if (!$gift->getIsClaimable()) {
             return [null, $gift->getIsClaimed()
                 ? Craft::t('subscribr', 'This gift has already been claimed.')
-                : Craft::t('subscribr', 'This gift is no longer available.')];
+                : Craft::t('subscribr', 'This gift is no longer available.'), ];
         }
 
         $plugin = Plugin::getInstance();
@@ -200,9 +200,24 @@ class Gifts extends Component
             return [null, Craft::t('subscribr', 'This gift no longer points at a subscription.')];
         }
 
+        // Claimed with a conditional update rather than a check-then-save, so that two requests
+        // racing on the same token cannot both win. Only the one whose UPDATE touched the row goes
+        // on to move the subscription; the other is told the gift has gone.
+        $claimedAt = new DateTime();
+        $won = Db::update(Table::GIFTS, [
+            'recipientId' => (int)$recipient->id,
+            'dateClaimed' => Db::prepareDateForDb($claimedAt),
+        ], [
+            'id' => $gift->id,
+            'dateClaimed' => null,
+        ]);
+
+        if ($won !== 1) {
+            return [null, Craft::t('subscribr', 'This gift has already been claimed.')];
+        }
+
         $gift->recipientId = (int)$recipient->id;
-        $gift->dateClaimed = new DateTime();
-        $this->saveGift($gift, false);
+        $gift->dateClaimed = $claimedAt;
 
         $subscription->userId = (int)$recipient->id;
         // The purchaser's stored card does not transfer. A gift is paid for; nothing about it may

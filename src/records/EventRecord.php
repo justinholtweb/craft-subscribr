@@ -9,6 +9,17 @@ use justinholtweb\subscribr\db\Table;
 
 /**
  * One line of a subscription's history.
+ *
+ * @property int $id
+ * @property int $subscriptionId
+ * @property string $type
+ * @property string|null $message
+ * @property string|null $data
+ * @property int|null $userId
+ * @property string $source
+ * @property string $dateCreated
+ * @property string $dateUpdated
+ * @property string $uid
  */
 class EventRecord extends ActiveRecord
 {

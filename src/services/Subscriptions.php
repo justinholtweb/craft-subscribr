@@ -216,6 +216,54 @@ class Subscriptions extends Component
         return true;
     }
 
+    /**
+     * Turn a requested restart date into the one a pause will actually use.
+     *
+     * A posted date is a request, not an override: on a plan with `maxPauseCycles` it is clamped
+     * to the cap, and an empty one becomes the cap, or the cap means nothing. A date that does not
+     * parse, or that has already passed, is refused rather than guessed at.
+     *
+     * @return array{0: DateTime|null, 1: string|null} The restart date (null for open-ended), or an error.
+     */
+    public function resolvePauseUntil(Subscription $subscription, mixed $requested, ?DateTime $now = null): array
+    {
+        $now ??= new DateTime();
+        $until = null;
+
+        if (is_string($requested) && trim($requested) !== '') {
+            // A date input posts a bare `Y-m-d`, which means midnight where the store is — read as
+            // UTC it restarts a pause the evening before the day the customer picked.
+            $until = DateTimeHelper::toDateTime(trim($requested), true) ?: null;
+
+            if ($until === null) {
+                return [null, Craft::t('subscribr', 'That isn’t a date we recognise.')];
+            }
+
+            if ($until <= $now) {
+                return [null, Craft::t('subscribr', 'Pick a date in the future to restart.')];
+            }
+        } elseif ($requested !== null && $requested !== '') {
+            return [null, Craft::t('subscribr', 'That isn’t a date we recognise.')];
+        }
+
+        $max = (int)($subscription->getPlan()->maxPauseCycles ?? 0);
+
+        if ($max > 0) {
+            $cadence = $subscription->getCadence();
+            $cap = $cadence->next($now);
+
+            for ($i = 1; $i < $max; $i++) {
+                $cap = $cadence->next($cap);
+            }
+
+            if ($until === null || $until > $cap) {
+                $until = $cap;
+            }
+        }
+
+        return [$until, null];
+    }
+
     public function resume(Subscription $subscription): bool
     {
         if (!$subscription->getIsPaused() && $subscription->subscriptionStatus !== Subscription::STATUS_PAUSED) {
@@ -558,7 +606,10 @@ class Subscriptions extends Component
             return [];
         }
 
-        return Subscription::find()->id(array_map('intval', $ids))->status(null)->all();
+        /** @var Subscription[] $subscriptions */
+        $subscriptions = Subscription::find()->id(array_map('intval', $ids))->status(null)->all();
+
+        return $subscriptions;
     }
 
     // Internals
@@ -591,7 +642,7 @@ class Subscriptions extends Component
     /** @return Item[] */
     private function _itemModels(array $rows): array
     {
-        return array_map(static function (array $row): Item {
+        return array_map(static function(array $row): Item {
             $item = new Item();
             $item->id = (int)$row['id'];
             $item->subscriptionId = (int)$row['subscriptionId'];

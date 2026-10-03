@@ -3,3 +3,6 @@ composer.lock
 .DS_Store
 .idea
 .vscode
+/promos/out/*.png
+/promos/shots/*.png
+/promos/fonts.css

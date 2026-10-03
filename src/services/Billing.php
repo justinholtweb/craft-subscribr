@@ -161,7 +161,7 @@ class Billing extends Component
         $capability = $this->getCapability($gateway);
 
         if ($capability === null || !$capability->getIsAutomatic()) {
-            return $this->_record($attempt, Attempt::MANUAL, $capability?->reason ?? 'This gateway cannot charge a stored payment method.');
+            return $this->_record($attempt, Attempt::MANUAL, $capability->reason ?? 'This gateway cannot charge a stored payment method.');
         }
 
         try {
@@ -242,7 +242,7 @@ class Billing extends Component
             ->asArray()
             ->all();
 
-        return array_map(static function (array $row): Attempt {
+        return array_map(static function(array $row): Attempt {
             $attempt = new Attempt();
             $attempt->id = (int)$row['id'];
             $attempt->subscriptionId = (int)$row['subscriptionId'];

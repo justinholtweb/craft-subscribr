@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<!-- handmade: hand-tuned deck -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Subscribr — Plugin Store promos</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --charcoal: #14100c;
+    --charcoal-light: #1e1812;
+    --charcoal-lighter: #2b231a;
+    --accent: #e58a32;
+    --accent-light: #f2a44e;
+    --gold: #ffd166;
+    --off-white: #f4f0ea;
+  }
+
+  html { background: #000; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--off-white);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- slide shell ---------------------------------------------------- */
+  .slide {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 85% 15%, rgba(229, 138, 50, 0.20) 0%, transparent 40%),
+      radial-gradient(ellipse at 65% 5%,  rgba(242, 164, 78, 0.13) 0%, transparent 35%),
+      radial-gradient(ellipse at 15% 85%, rgba(255, 209, 102, 0.07) 0%, transparent 40%),
+      radial-gradient(ellipse at 35% 95%, rgba(229, 138, 50, 0.09) 0%, transparent 35%),
+      linear-gradient(135deg, #14100c 0%, #1d1710 30%, #221a12 60%, #14100c 100%);
+  }
+
+  /* Oversized watermark, echoing the app icon */
+  .slide::after {
+    content: '';
+    position: absolute;
+    top: -18%;
+    left: -12%;
+    width: 1180px;
+    height: 1180px;
+    background: url('assets/watermark.svg') no-repeat center / contain;
+    opacity: 0.05;
+    pointer-events: none;
+  }
+
+  /* Hairline along the top edge */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--gold), var(--accent));
+    z-index: 5;
+  }
+
+  .inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 118px 130px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* ---- type ------------------------------------------------------------ */
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(244, 240, 234, 0.62);
+    margin-bottom: 34px;
+  }
+  .eyebrow .rule {
+    width: 58px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--accent-light);
+  }
+
+  h1, h2 {
+    font-family: 'Jersey 20', sans-serif;
+    font-weight: 400;
+    line-height: 0.9;
+    letter-spacing: 0.005em;
+  }
+
+  .gradient-text {
+    background: linear-gradient(100deg, #e58a32 0%, #f2a44e 34%, #ffd98a 62%, #e58a32 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .lede {
+    font-size: 34px;
+    line-height: 1.5;
+    color: rgba(244, 240, 234, 0.72);
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+
+  /* ---- cover slide ----------------------------------------------------- */
+  .cover .inner { gap: 90px; }
+  .cover .copy { flex: 1 1 auto; }
+  .cover h1 { font-size: 210px; margin-bottom: 26px; }
+  .cover .tagline {
+    font-family: 'Jersey 20', sans-serif;
+    font-size: 60px;
+    line-height: 1.02;
+    color: var(--off-white);
+    margin-bottom: 40px;
+    max-width: 15ch;
+  }
+  .cover .lede { max-width: 27ch; font-size: 30px; }
+
+  .cover .mark {
+    flex: 0 0 auto;
+    width: 460px;
+    height: 460px;
+    filter: drop-shadow(14px 14px 0 rgba(0, 0, 0, 0.35));
+  }
+  .cover .mark img { width: 100%; height: 100%; display: block; }
+
+  .badges { display: flex; gap: 16px; margin-top: 52px; }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 26px;
+    font-size: 22px;
+    font-weight: 500;
+    color: rgba(244, 240, 234, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 999px;
+  }
+  .badge .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent-light);
+  }
+
+  /* ---- the before/after statement -------------------------------------- */
+  .statement .inner { flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .statement .eyebrow { justify-content: center; }
+  .swap { display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 8px; }
+  .swap .caption {
+    font-size: 26px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(244, 240, 234, 0.42);
+  }
+  .swap .before {
+    font-size: 92px;
+    color: rgba(244, 240, 234, 0.34);
+    letter-spacing: 0.02em;
+  }
+  .swap .arrow {
+    width: 4px;
+    height: 62px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, rgba(242,164,78,0.15), var(--accent-light));
+    position: relative;
+  }
+  .swap .arrow::after {
+    content: '';
+    position: absolute;
+    left: 50%; bottom: -4px;
+    width: 18px; height: 18px;
+    transform: translateX(-50%) rotate(45deg);
+    border-right: 4px solid var(--accent-light);
+    border-bottom: 4px solid var(--accent-light);
+    border-radius: 2px;
+  }
+  .swap .after {
+    font-size: 150px;
+    line-height: 1;
+    letter-spacing: 0.01em;
+  }
+  .statement .lede { margin-top: 40px; max-width: 38ch; font-size: 32px; }
+  /* Longer than Abacus's order number, so it is stepped down to stay on one line. */
+  .statement .before { font-size: 74px; }
+  .statement .after { font-size: 112px; }
+
+  /* ---- gateway grid (slide 3) ------------------------------------------ */
+  .gws { display: flex; flex-wrap: wrap; gap: 16px; }
+  .gw {
+    padding: 20px 30px;
+    font-size: 27px;
+    border-radius: 14px;
+    background: rgba(43, 35, 26, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(244, 240, 234, 0.74);
+  }
+  .gw.dim { color: rgba(244, 240, 234, 0.34); }
+
+  /* ---- what a real order brings (slide 4) ------------------------------- */
+  .gets { display: flex; flex-wrap: wrap; gap: 16px; }
+  .get {
+    display: inline-flex; align-items: center; gap: 14px;
+    padding: 22px 30px;
+    font-size: 27px;
+    border-radius: 14px;
+    background: rgba(43, 35, 26, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(244, 240, 234, 0.78);
+  }
+  .get::before {
+    content: '';
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--accent-light);
+  }
+
+  /* ---- booked-action rows (slide 6) ------------------------------------- */
+  .booked {
+    display: flex; align-items: center; gap: 26px;
+    padding: 26px 34px;
+    border-radius: 16px;
+    background: rgba(43, 35, 26, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .booked .when {
+    flex: 0 0 150px;
+    font-size: 23px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(244, 240, 234, 0.4);
+  }
+  .booked .act { flex: 1 1 auto; font-size: 29px; color: var(--off-white); }
+  .booked .eff { flex: 0 0 auto; font-size: 23px; color: var(--accent-light); }
+
+  /* ---- dunning ladder (slide 8) ----------------------------------------- */
+  .ladder { display: flex; flex-direction: column; gap: 14px; }
+  .rung {
+    display: flex; align-items: center; gap: 24px;
+    padding: 22px 32px;
+    border-radius: 14px;
+    background: rgba(43, 35, 26, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .rung .at {
+    flex: 0 0 150px;
+    font-size: 27px;
+    color: var(--accent-light);
+  }
+  .rung .do { flex: 1 1 auto; font-size: 27px; color: rgba(244, 240, 234, 0.78); }
+  .rung.last { border-color: rgba(229, 138, 50, 0.4); }
+  .rung.last .at, .rung.last .do { color: var(--gold); }
+
+  /* ---- feature slides -------------------------------------------------- */
+  .feature .inner { align-items: center; }
+  .feature .copy { width: 780px; flex: 0 0 780px; }
+  .feature h2 { font-size: 108px; margin-bottom: 30px; }
+  .feature .lede { max-width: 21ch; }
+
+  .points {
+    list-style: none;
+    margin-top: 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .points li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 25px;
+    line-height: 1.4;
+    color: rgba(244, 240, 234, 0.6);
+  }
+  .points li .tick {
+    flex: 0 0 auto;
+    margin-top: 9px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent-light);
+  }
+
+  /* Right-hand panel shared by the token, bucket, flow and table slides */
+  .panel {
+    position: absolute;
+    top: 50%;
+    left: 900px;
+    right: 130px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* ---- format tokens --------------------------------------------------- */
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding: 34px 38px;
+    border-radius: 16px;
+    background: rgba(43, 35, 26, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .token-row .fmt { font-size: 32px; color: rgba(244, 240, 234, 0.55); flex: 1 1 auto; }
+  .token-row .to { color: var(--accent-light); font-size: 30px; flex: 0 0 auto; }
+  .token-row .val { font-size: 34px; color: var(--off-white); flex: 0 0 auto; }
+
+  /* ---- reset buckets --------------------------------------------------- */
+  .buckets { display: flex; gap: 22px; }
+  .bucket {
+    flex: 1 1 0;
+    padding: 38px 30px;
+    border-radius: 18px;
+    background: rgba(43, 35, 26, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: center;
+  }
+  .bucket .period {
+    font-size: 26px;
+    letter-spacing: 0.1em;
+    color: rgba(244, 240, 234, 0.5);
+    margin-bottom: 20px;
+  }
+  .bucket .count {
+    font-family: 'Jersey 20', sans-serif;
+    font-size: 92px;
+    line-height: 1;
+    color: var(--accent-light);
+  }
+  .bucket .label { font-size: 21px; color: rgba(244, 240, 234, 0.4); margin-top: 16px; }
+  .bucket.fresh .count { color: var(--gold); }
+
+  .note {
+    font-size: 24px;
+    line-height: 1.5;
+    color: rgba(244, 240, 234, 0.45);
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* ---- allocation flow -------------------------------------------------- */
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    padding: 28px 34px;
+    border-radius: 16px;
+    background: rgba(43, 35, 26, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .step .num {
+    flex: 0 0 auto;
+    width: 58px; height: 58px;
+    display: grid; place-items: center;
+    border-radius: 12px;
+    background: var(--accent);
+    font-family: 'Jersey 20', sans-serif;
+    font-size: 38px;
+    color: #fff;
+  }
+  .step .label { display: block; font-size: 29px; font-weight: 600; color: var(--off-white); }
+  .step .sub { display: block; font-size: 21px; color: rgba(244, 240, 234, 0.55); margin-top: 6px; }
+
+  .lock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    font-size: 23px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(244, 240, 234, 0.42);
+  }
+  .lock .bar { flex: 1 1 auto; height: 1px; background: rgba(255,255,255,0.1); }
+
+  /* ---- backfill table --------------------------------------------------- */
+  .sheet {
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+  }
+  .sheet .head {
+    display: flex;
+    padding: 26px 38px;
+    background: rgba(229, 138, 50, 0.18);
+    font-size: 22px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(244, 240, 234, 0.6);
+  }
+  .sheet .row {
+    display: flex;
+    padding: 26px 38px;
+    background: rgba(43, 35, 26, 0.58);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 31px;
+  }
+  .sheet .c1 { flex: 0 0 300px; color: rgba(244, 240, 234, 0.4); }
+  .sheet .c2 { flex: 0 0 70px; color: var(--accent-light); }
+  .sheet .c3 { flex: 1 1 auto; color: var(--off-white); }
+
+  /* ---- terminal --------------------------------------------------------- */
+  .term {
+    position: absolute;
+    top: 50%;
+    left: 900px;
+    right: -110px;
+    transform: translateY(-50%);
+    border-radius: 14px; overflow: hidden; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .term .chrome {
+    height: 44px;
+    background: #2b231a;
+    background-image:
+      radial-gradient(circle at 26px 22px, #ff5f57 6.5px, transparent 7px),
+      radial-gradient(circle at 52px 22px, #ffbd2e 6.5px, transparent 7px),
+      radial-gradient(circle at 78px 22px, #28ca42 6.5px, transparent 7px);
+  }
+  .term .body {
+    background: #17120d;
+    padding: 42px 44px;
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 25px;
+    line-height: 2.0;
+  }
+  .term .prompt { color: var(--accent-light); }
+  .term .cmd { color: var(--off-white); }
+  .term .out { color: rgba(244, 240, 234, 0.45); }
+  .term .ok { color: #4ade80; }
+  .term .warn { color: var(--gold); }
+  .term .blank { display: block; height: 20px; }
+
+  /* ---- footer lockup --------------------------------------------------- */
+  .footer {
+    position: absolute;
+    left: 130px;
+    bottom: 62px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+    color: rgba(244, 240, 234, 0.4);
+  }
+  .footer img { width: 40px; height: 40px; border-radius: 9px; }
+  .footer b { color: rgba(244, 240, 234, 0.72); font-weight: 600; }
+
+  /* Only render the requested slide when screenshotting */
+  body.single .slide { display: none; }
+  body.single .slide.active { display: block; }
+
+  /* ---- control-panel screenshot cards -------------------------------
+     Self-contained: these cards must drop into any deck in the family, and the decks
+     do not share a class system. Only --accent and --off-white are relied on, both of
+     which every deck defines, and both have fallbacks. */
+  .slide.cpcard { display: block; }
+  .cpcard .cpc-inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 112px 120px;
+    display: flex;
+    align-items: center;
+    gap: 70px;
+  }
+  .cpcard .cpc-copy { width: 660px; flex: 0 0 660px; }
+
+  .cpcard .cpc-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 34px;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent, #e58a32);
+  }
+  .cpcard .cpc-eyebrow i {
+    display: block;
+    width: 62px;
+    height: 3px;
+    background: var(--accent, #e58a32);
+    border-radius: 2px;
+  }
+
+  .cpcard .cpc-h2 {
+    font-family: 'Jersey 20', 'Inter', sans-serif;
+    font-size: 88px;
+    line-height: 0.96;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    margin: 0 0 28px;
+    color: var(--off-white, #f4f0ea);
+  }
+
+  .cpcard .cpc-lede {
+    font-size: 33px;
+    line-height: 1.42;
+    color: rgba(244, 240, 234, 0.66);
+    margin: 0;
+  }
+
+  .cpcard .cpc-points { list-style: none; margin: 40px 0 0; padding: 0; }
+  .cpcard .cpc-points li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 26px;
+    line-height: 1.5;
+    color: rgba(244, 240, 234, 0.72);
+    margin-bottom: 18px;
+  }
+  .cpcard .cpc-points li::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    margin-top: 14px;
+    border-radius: 50%;
+    background: var(--accent, #e58a32);
+  }
+
+  .cpcard .cpc-panel { flex: 1 1 auto; min-width: 0; }
+
+  .cpcard .cpc-frame {
+    border-radius: 14px;
+    overflow: hidden;
+    background: #e4edf6;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55), 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+  .cpcard .cpc-chrome {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 18px;
+    background: linear-gradient(180deg, #2b231a 0%, #1f1912 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+  }
+  .cpcard .cpc-chrome b { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.16); }
+  .cpcard .cpc-chrome b:nth-child(1) { background: #ff5f57; }
+  .cpcard .cpc-chrome b:nth-child(2) { background: #febc2e; }
+  .cpcard .cpc-chrome b:nth-child(3) { background: #28c840; }
+  .cpcard .cpc-chrome em {
+    margin-left: 12px;
+    font-style: normal;
+    font-size: 19px;
+    letter-spacing: 0.02em;
+    color: rgba(244, 240, 234, 0.45);
+  }
+  .cpcard .cpc-frame img { display: block; width: 100%; height: auto; }
+
+  /* A tall capture is anchored to its top — the interesting rows are always first.
+     The fade makes the cut read as "there is more" rather than as a broken edge. */
+  .cpcard .cpc-frame.cpc-clip { max-height: 620px; position: relative; }
+  .cpcard .cpc-frame.cpc-clip img { object-fit: cover; object-position: top center; max-height: 580px; }
+  .cpcard .cpc-frame.cpc-clip::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 130px;
+    background: linear-gradient(180deg, rgba(228,237,246,0) 0%, rgba(228,237,246,0.92) 78%, #e4edf6 100%);
+  }
+
+  .cpcard .cpc-caption {
+    display: block;
+    margin-top: 20px;
+    font-size: 22px;
+    line-height: 1.45;
+    color: rgba(244, 240, 234, 0.52);
+  }
+  .cpcard .cpc-caption b { color: rgba(244, 240, 234, 0.80); font-weight: 600; }
+
+</style>
+</head>
+<body>
+
+<!-- 1 · Cover ============================================================ -->
+<section class="slide cover" data-n="1">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Craft Commerce 5</div>
+      <h1 class="gradient-text">Subscribr</h1>
+      <p class="tagline">Recurring commerce that isn&rsquo;t a Stripe feature.</p>
+      <p class="lede">Subscription boxes, skip, pause and swap, prepaid and gift plans, proration and
+        dunning — on any gateway that can store a payment method.</p>
+      <div class="badges">
+        <span class="badge"><span class="dot"></span> Lite $99 &nbsp;·&nbsp; Pro $199</span>
+        <span class="badge">Craft 5.3+ · Commerce 5 · PHP 8.2+</span>
+      </div>
+    </div>
+    <div class="mark"><img src="assets/icon.svg" alt=""></div>
+  </div>
+</section>
+
+<!-- 2 · The question ===================================================== -->
+<section class="slide statement" data-n="2">
+  <div class="inner">
+    <div class="eyebrow"><span class="rule"></span> The whole idea</div>
+    <div class="swap">
+      <span class="caption">Commerce asks the gateway</span>
+      <span class="before">Do you implement subscriptions?</span>
+      <span class="arrow"></span>
+      <span class="caption">Subscribr asks a smaller question</span>
+      <span class="after gradient-text">Can you store a card?</span>
+    </div>
+    <p class="lede">The first question has one affirmative answer in practice. The second is true of nearly
+      every gateway ever written for Commerce — and a gateway that can&rsquo;t store a card still carries
+      subscriptions, by invoice.</p>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Subscribr</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-subscribr</div>
+</section>
+
+<!-- 3 · Gateways ========================================================= -->
+<section class="slide feature" data-n="3">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Gateways</div>
+      <h2>Your gateway,<br>not ours</h2>
+      <p class="lede">Nothing special-cases Stripe. A Stripe gateway is just a gateway with payment sources.</p>
+      <ul class="points">
+        <li><span class="tick"></span> Stored card? It renews by itself, off-session</li>
+        <li><span class="tick"></span> No stored card? An emailed link drops the renewal into your own checkout</li>
+        <li><span class="tick"></span> A gateway screen tells you which you have, before you commit</li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="gws">
+      <span class="gw">Stripe</span>
+      <span class="gw">Braintree</span>
+      <span class="gw">Authorize.net</span>
+      <span class="gw">Mollie</span>
+      <span class="gw">Opayo</span>
+      <span class="gw">Worldpay</span>
+      <span class="gw">Square</span>
+      <span class="gw">Adyen</span>
+      <span class="gw">Paystack</span>
+      <span class="gw">eWAY</span>
+      <span class="gw dim">…and the rest</span>
+    </div>
+    <p class="note">The test is <span class="mono">supportsPaymentSources()</span> plus <span class="mono">supportsPurchase()</span> — not an interface only one gateway implements.</p>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Subscribr</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-subscribr</div>
+</section>
+
+<!-- 4 · Real orders ====================================================== -->
+<section class="slide feature" data-n="4">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Renewals</div>
+      <h2>A renewal is<br>a real order</h2>
+      <p class="lede">Every cycle raises an ordinary Craft Commerce order. Not a mirror of one held somewhere else.</p>
+      <ul class="points">
+        <li><span class="tick"></span> It shows up in the order index and your reports</li>
+        <li><span class="tick"></span> Your Commerce plugins keep working on it</li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="gets">
+      <span class="get">Tax</span>
+      <span class="get">Shipping</span>
+      <span class="get">Discounts</span>
+      <span class="get">Coupons</span>
+      <span class="get">Order statuses</span>
+      <span class="get">Emails</span>
+      <span class="get">PDFs</span>
+      <span class="get">Reporting</span>
+      <span class="get">Refunds</span>
+    </div>
+    <p class="note">None of it reimplemented, and so none of it subtly wrong.</p>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Subscribr</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-subscribr</div>
+</section>
+
+<!-- 5 · Mixed carts ====================================================== -->
+<section class="slide feature" data-n="5">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Mixed carts</div>
+      <h2>One cart,<br>both kinds</h2>
+      <p class="lede">A recurring line is an ordinary line item carrying one option key. Buy a bag once and
+        subscribe to the same bag, in the same basket.</p>
+      <ul class="points">
+        <li><span class="tick"></span> No bespoke cart, no second checkout</li>
+        <li><span class="tick"></span> Commerce de-duplicates on the options hash, so the two lines stay apart</li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="sheet mono">
+      <div class="head"><span class="c1">Line item</span><span class="c2"></span><span class="c3">Options</span></div>
+      <div class="row"><span class="c1">Yirgacheffe 250g</span><span class="c2">&times;1</span><span class="c3">&mdash;</span></div>
+      <div class="row"><span class="c1">Yirgacheffe 250g</span><span class="c2">&times;2</span><span class="c3">subscribrPlan: monthly</span></div>
+      <div class="row"><span class="c1">Stoneware mug</span><span class="c2">&times;1</span><span class="c3">&mdash;</span></div>
+      <div class="row"><span class="c1">Huila 250g</span><span class="c2">&times;1</span><span class="c3">subscribrPrepaid: 6</span></div>
+    </div>
+    <p class="note">Trials, joining fees and prepayment are adjustments, so the customer still sees what they signed up for at its real price.</p>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Subscribr</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-subscribr</div>
+</section>
+
+<!-- 6 · Booked, not applied ============================================== -->
+<section class="slide feature" data-n="6">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Self-service</div>
+      <h2>Booked,<br>not applied</h2>
+      <p class="lede">Self-service is mostly &ldquo;do this next time&rdquo;, not &ldquo;do this now&rdquo;. A booking is a
+        row, consumed at the cycle boundary.</p>
+      <ul class="points">
+        <li><span class="tick"></span> Changing your mind means cancelling a booking</li>
+        <li><span class="tick"></span> One place decides what a cycle is supposed to be</li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="booked"><span class="when">Next cycle</span><span class="act">Skip October</span><span class="eff">replaces the renewal</span></div>
+    <div class="booked"><span class="when">Next cycle</span><span class="act">Swap to decaf &times;2</span><span class="eff">changes the renewal</span></div>
+    <div class="booked"><span class="when">Next cycle</span><span class="act">Move to Coffee Club Double</span><span class="eff">changes the renewal</span></div>
+    <div class="booked"><span class="when">Now</span><span class="act">Pause until March</span><span class="eff">stops the clock</span></div>
+    <p class="note">Pinned items are deleted when the cycle renews, so the month after goes back to normal by itself.</p>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Subscribr</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-subscribr</div>
+</section>
+
+<!-- 7 · Proration ======================================================== -->
+<section class="slide feature" data-n="7">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Changing plan</div>
+      <h2>Shows the maths<br>before it charges</h2>
+      <p class="lede">A plan switch is previewed in full — the unused credit, the charge, and the date the next
+        payment lands on.</p>
+      <ul class="points">
+        <li><span class="tick"></span> The subscriber agrees to a number, not a surprise</li>
+        <li><span class="tick"></span> The preview and the charge come from the same code</li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="sheet mono">
+      <div class="head"><span class="c1">Switching</span><span class="c2"></span><span class="c3">Monthly &rarr; Double</span></div>
+      <div class="row"><span class="c1">Unused on Monthly</span><span class="c2">&minus;</span><span class="c3">$18.60 credit</span></div>
+      <div class="row"><span class="c1">Rest of cycle on Double</span><span class="c2">+</span><span class="c3">$33.60</span></div>
+      <div class="row"><span class="c1">Due today</span><span class="c2">=</span><span class="c3">$15.00</span></div>
+      <div class="row"><span class="c1">Next payment</span><span class="c2">&rarr;</span><span class="c3">3 Oct 2026</span></div>
+    </div>
+    <p class="note">The next date is computed by the same <span class="mono">Cadence</span> the engine bills on, so nobody is shown one date and billed on another.</p>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Subscribr</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-subscribr</div>
+</section>
+
+<!-- 8 · Dunning ========================================================== -->
+<section class="slide feature" data-n="8">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Dunning</div>
+      <h2>A decline is<br>not the end</h2>
+      <p class="lede">Failed payments run a sequence you write, in the control panel, with the money at risk on
+        screen while it runs.</p>
+      <ul class="points">
+        <li><span class="tick"></span> A hard decline skips to the end instead of retrying a stolen card</li>
+        <li><span class="tick"></span> Fixing the card brings the retry forward to now</li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ladder">
+      <div class="rung"><span class="at">+24 hours</span><span class="do">Retry the stored card</span></div>
+      <div class="rung"><span class="at">+72 hours</span><span class="do">Retry again</span></div>
+      <div class="rung"><span class="at">+120 hours</span><span class="do">Email the subscriber</span></div>
+      <div class="rung"><span class="at">+168 hours</span><span class="do">Last retry</span></div>
+      <div class="rung last"><span class="at">+240 hours</span><span class="do">Cancel</span></div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Subscribr</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-subscribr</div>
+</section>
+
+<!-- 9 · control-panel screenshot ========================================= -->
+<section class="slide cpcard" data-n="9">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> In the control panel</div>
+      <h2 class="cpc-h2">Every subscription,<br>and what&rsquo;s next</h2>
+      <p class="cpc-lede">Subscriptions are elements, so they get the index you already know — searchable, sortable, exportable.</p>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Subscribr subscriptions</em></div>
+        <img src="shots/subscribr-subscriptions.png" alt="">
+      </figure>
+      <span class="cpc-caption">The Subscribr subscriptions index listing thirteen subscriptions with their status, plan, renewal price, cadence, next payment date and cycles billed</span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Subscribr</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-subscribr</div>
+</section>
+
+<!-- 10 · control-panel screenshot ======================================== -->
+<section class="slide cpcard" data-n="10">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> In the control panel</div>
+      <h2 class="cpc-h2">The money<br>at risk today</h2>
+      <p class="cpc-lede">What is past due, what it is worth, when each card gets tried again, and how much you got back.</p>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame cpc-clip">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Subscribr dunning</em></div>
+        <img src="shots/subscribr-dunning.png" alt="">
+      </figure>
+      <span class="cpc-caption">The Subscribr dunning screen showing $94.00 at risk across three past-due subscriptions, a 28.6% recovery rate, and the queue of cards waiting on a retry</span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Subscribr</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-subscribr</div>
+</section>
+
+<!-- 11 · control-panel screenshot ======================================== -->
+<section class="slide cpcard" data-n="11">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> In the control panel</div>
+      <h2 class="cpc-h2">One history,<br>not two</h2>
+      <p class="cpc-lede">Every state change is written to one ledger, and the subscriber&rsquo;s portal reads the same rows you do.</p>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame cpc-clip">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Subscribr subscription</em></div>
+        <img src="shots/subscribr-timeline.png" alt="">
+      </figure>
+      <span class="cpc-caption">A Subscribr subscription showing its schedule, the four real Commerce orders its renewals raised, and the event ledger behind them</span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Subscribr</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-subscribr</div>
+</section>
+
+<script>
+  var n = new URLSearchParams(location.search).get('s');
+  if (n) {
+    document.body.classList.add('single');
+    var el = document.querySelector('.slide[data-n="' + n + '"]');
+    if (el) el.classList.add('active');
+  }
+</script>
+</body>
+</html>

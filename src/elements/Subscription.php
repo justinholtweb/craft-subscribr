@@ -11,7 +11,6 @@ use craft\commerce\elements\Order;
 use craft\commerce\models\PaymentSource;
 use craft\commerce\Plugin as Commerce;
 use craft\elements\Address;
-use craft\elements\db\ElementQueryInterface;
 use craft\elements\User;
 use craft\enums\Color;
 use craft\helpers\Db;
@@ -177,7 +176,7 @@ class Subscription extends Element
         return false;
     }
 
-    public static function find(): ElementQueryInterface
+    public static function find(): SubscriptionQuery
     {
         return new SubscriptionQuery(static::class);
     }
@@ -226,7 +225,7 @@ class Subscription extends Element
     public function getName(): string
     {
         $plan = $this->getPlan();
-        $name = $plan?->name ?? Craft::t('subscribr', 'Subscription');
+        $name = $plan->name ?? Craft::t('subscribr', 'Subscription');
 
         return $this->quantity > 1 ? $name . ' × ' . $this->quantity : $name;
     }
@@ -690,10 +689,10 @@ class Subscription extends Element
         return match ($attribute) {
             'reference' => Html::tag('code', $this->reference),
             'subscriber' => Html::encode((string)($this->getSubscriber() ?? Craft::t('subscribr', 'Guest'))),
-            'plan' => Html::encode($this->getPlan()?->name ?? '—'),
+            'plan' => Html::encode($this->getPlan()->name ?? '—'),
             'renewalPrice' => $this->getRenewalPriceAsCurrency(),
             'cadence' => Html::encode($this->getCadence()->describe()),
-            'gateway' => Html::encode($this->getGateway()?->name ?? '—'),
+            'gateway' => Html::encode($this->getGateway()->name ?? '—'),
             'failureCount' => $this->failureCount > 0
                 ? Html::tag('span', (string)$this->failureCount, ['class' => 'error'])
                 : '0',

@@ -111,7 +111,7 @@ class Proration extends Component
             $proration->addLine(
                 Craft::t('subscribr', 'Change takes effect {date}', ['date' => $periodEnd->format('j M Y')]),
                 0.0,
-                Craft::t('subscribr', 'You keep {plan} until then.', ['plan' => $oldPlan?->name ?? '']),
+                Craft::t('subscribr', 'You keep {plan} until then.', ['plan' => $oldPlan->name ?? '']),
             );
             $proration->addLine(
                 Craft::t('subscribr', 'Then {amount} {cadence}', [
@@ -137,7 +137,7 @@ class Proration extends Component
         $proration->charge = Money::round($proration->newCycleAmount * $fraction);
 
         $proration->addLine(
-            Craft::t('subscribr', 'Unused time on {plan}', ['plan' => $oldPlan?->name ?? '']),
+            Craft::t('subscribr', 'Unused time on {plan}', ['plan' => $oldPlan->name ?? '']),
             -$proration->credit,
             Craft::t('subscribr', '{n} of {total} days remaining', [
                 'n' => $proration->daysRemaining,
@@ -249,7 +249,7 @@ class Proration extends Component
             (int)$subscription->id,
             LogEntry::TYPE_SWITCHED,
             Craft::t('subscribr', 'Moved from {from} to {to}; {due} due today.', [
-                'from' => $oldPlan?->name ?? '—',
+                'from' => $oldPlan->name ?? '—',
                 'to' => $newPlan->name,
                 'due' => Money::format(max(0, $proration->getNetDue()), $subscription->currency),
             ]),
@@ -366,8 +366,8 @@ class Proration extends Component
             $lineItem->setPrice($due);
             $lineItem->setPromotionalPrice(null);
             $lineItem->setDescription(Craft::t('subscribr', 'Plan change: {from} → {to}', [
-                'from' => $proration->oldPlan?->name ?? '—',
-                'to' => $proration->newPlan?->name ?? '—',
+                'from' => $proration->oldPlan->name ?? '—',
+                'to' => $proration->newPlan->name ?? '—',
             ]));
 
             $order->setLineItems([$lineItem]);

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace justinholtweb\subscribr\models;
 
 use craft\base\Model;
-use justinholtweb\subscribr\helpers\Money;
 use DateTime;
+use justinholtweb\subscribr\helpers\Money;
 
 /**
  * What a mid-cycle change costs, and the arithmetic that got there.

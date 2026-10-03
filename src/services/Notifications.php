@@ -162,7 +162,7 @@ class Notifications extends Component
         }
 
         $subscriber = $subscription->getSubscriber();
-        $email = $subscriber?->email ?? $subscription->getOrder()?->email;
+        $email = $subscriber->email ?? $subscription->getOrder()?->email;
 
         if (!$email) {
             return false;
