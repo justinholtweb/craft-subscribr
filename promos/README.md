@@ -11,7 +11,7 @@ the plugin's marketing page at
 ./build.sh "2 9"    # just slides 2 and 9
 ```
 
-Output lands in `out/` as `subscribr-promo-N.png`, 1920×1080 (rendered at 2× in headless Chrome,
+Output lands in `out/` as `subscribr-promo-N.jpg`, 1920×1080 (rendered at 2× in headless Chrome,
 then downsampled so the type stays crisp).
 
 ## Slides

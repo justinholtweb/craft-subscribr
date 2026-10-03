@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Renders the Plugin Store promo images from slides.html.
-# Output: promos/out/subscribr-promo-N.png at 1920x1080 (rendered at 2x, downsampled).
+# Output: promos/out/subscribr-promo-N.jpg at 1920x1080 (rendered at 2x, downsampled).
+# Promos ship as JPEG, never PNG: a 1920x1080 slide is ~1 MB as PNG and a fraction of that as JPEG.
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -25,6 +26,9 @@ for n in $SLIDES; do
     --virtual-time-budget=5000 \
     --screenshot="out/subscribr-promo-$n.png" \
     "file://$PWD/slides.html?s=$n" >/dev/null 2>&1
-  sips --resampleWidth 1920 "out/subscribr-promo-$n.png" >/dev/null
-  echo "  built out/subscribr-promo-$n.png"
+  # Chrome can only write PNG; downsample and convert in one pass, then drop the PNG.
+  sips --resampleWidth 1920 -s format jpeg -s formatOptions 90 \
+    "out/subscribr-promo-$n.png" --out "out/subscribr-promo-$n.jpg" >/dev/null
+  rm "out/subscribr-promo-$n.png"
+  echo "  built out/subscribr-promo-$n.jpg"
 done
